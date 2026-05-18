@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/crons/push-domingo",
+      "schedule": "0 11 * * 0"
+    },
+    {
+      "path": "/api/crons/push-quinta",
+      "schedule": "0 17 * * 4"
+    },
+    {
+      "path": "/api/crons/push-sexta",
+      "schedule": "0 21 * * 5"
+    },
+    {
+      "path": "/api/crons/push-mes",
+      "schedule": "0 12 1 * *"
+    }
+  ]
+}
