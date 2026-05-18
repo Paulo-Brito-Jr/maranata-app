@@ -1,0 +1,1129 @@
+// =============================================================================
+// Maranata App — schema do banco de dados (Supabase Postgres)
+// =============================================================================
+// Cobre o que o InChurch tinha + módulos próprios (Kids, Loja, Doações
+// Safe2Pay recorrentes, Audit log). Tabelas espelham os dados reais
+// auditados (38 tabelas com 14.509 registros) e adicionam o que faltava.
+//
+// IDs em cuid2. RLS via Supabase policies (definidas em migrations).
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// ORGANIZACIONAL
+// =============================================================================
+
+model Igreja {
+  id                  String   @id @default(cuid())
+  inchurchId          Int?     @unique // ex: 25524 (Tijuca) — pra cross-ref
+  nome                String
+  apelido             String?
+  endereco            String?
+  cidade              String?
+  estado              String?
+  cep                 String?
+  telefone            String?
+  email               String?
+  ehSede              Boolean  @default(false)
+  regionalId          String?
+  regional            Regional? @relation(fields: [regionalId], references: [id])
+  ativa               Boolean  @default(true)
+  criadaEm            DateTime @default(now())
+  atualizadaEm        DateTime @updatedAt
+
+  membros             Membro[]
+  visitantes          Visitante[]
+  usuariosApp         UsuarioApp[]
+  eventos             Evento[]
+  celulas             Celula[]
+  pregacoes           Pregacao[]
+  lancamentos         LancamentoFinanceiro[]
+  doacoes             Doacao[]
+  contas              ContaBancaria[]
+  campanhas           Campanha[]
+  pushes              PushNotification[]
+  kidsCriancas        KidsCrianca[]
+  kidsTurmas          KidsTurma[]
+  lojaPedidos         LojaPedido[]
+
+  @@index([regionalId])
+}
+
+model Regional {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  descricao String?
+  criadaEm  DateTime @default(now())
+  igrejas   Igreja[]
+}
+
+// =============================================================================
+// PESSOAS
+// =============================================================================
+
+enum PapelSistema {
+  SUPER_ADMIN
+  PASTOR_DIRETORIA
+  ADMIN_IGREJA
+  LIDER_CELULA
+  SECRETARIA
+  FINANCEIRO
+  KIDS_RESPONSAVEL
+  MEMBRO
+}
+
+enum StatusMembro {
+  ATIVO
+  INATIVO
+  TRANSFERIDO
+  FALECIDO
+  AFASTADO
+}
+
+enum EstadoCivil {
+  SOLTEIRO
+  CASADO
+  DIVORCIADO
+  VIUVO
+  UNIAO_ESTAVEL
+}
+
+model Usuario {
+  id              String       @id @default(cuid())
+  inchurchId      Int?         @unique
+  maranataKeySub  String?      @unique // sub do JWT da Maranata Key
+  email           String       @unique
+  nome            String
+  papel           PapelSistema @default(MEMBRO)
+  ativo           Boolean      @default(true)
+  ultimoLogin     DateTime?
+  criadoEm        DateTime     @default(now())
+  atualizadoEm    DateTime     @updatedAt
+
+  membro          Membro?
+
+  @@index([papel])
+}
+
+model Membro {
+  id              String        @id @default(cuid())
+  inchurchId      Int?          @unique
+  igrejaId        String
+  igreja          Igreja        @relation(fields: [igrejaId], references: [id])
+  usuarioId       String?       @unique
+  usuario         Usuario?      @relation(fields: [usuarioId], references: [id])
+  usuarioAppId    String?       @unique
+  usuarioApp      UsuarioApp?   @relation(fields: [usuarioAppId], references: [id])
+
+  nome            String
+  fotoUrl         String?
+  email           String?
+  telefone        String?
+  dataNascimento  DateTime?
+  cpf             String?       @unique
+  rg              String?
+  profissao       String?
+  estadoCivil     EstadoCivil?
+  conjugueId      String?
+  conjugue        Membro?       @relation("MembroConjugue", fields: [conjugueId], references: [id])
+  conjugueDe      Membro[]      @relation("MembroConjugue")
+  paiId           String?
+  pai             Membro?       @relation("MembroPai", fields: [paiId], references: [id])
+  filhosPai       Membro[]      @relation("MembroPai")
+  maeId           String?
+  mae             Membro?       @relation("MembroMae", fields: [maeId], references: [id])
+  filhosMae       Membro[]      @relation("MembroMae")
+
+  dataBatismo     DateTime?
+  dataConversao   DateTime?
+  status          StatusMembro  @default(ATIVO)
+  observacoes     String?
+
+  endereco        String?
+  cidade          String?
+  estado          String?
+  cep             String?
+
+  criadoEm        DateTime      @default(now())
+  atualizadoEm    DateTime      @updatedAt
+
+  participacoes   ParticipanteCelula[]
+  inscricoes      InscricaoEvento[]
+  pedidos         PedidoOracao[]
+  testemunhos     Testemunho[]
+  doacoesFeitas   Doacao[]
+  jornadas        PessoaJornada[]
+  responsaveisKids KidsResponsavel[]
+  novoConvertido  NovoConvertido?
+  equipes         EquipeMembro[]
+  liderancas      LiderancaCelula[]
+
+  @@index([igrejaId])
+  @@index([status])
+  @@index([nome])
+}
+
+model UsuarioApp {
+  id            String   @id @default(cuid())
+  inchurchId    Int?     @unique
+  igrejaId      String?
+  igreja        Igreja?  @relation(fields: [igrejaId], references: [id])
+  email         String?
+  telefone      String?
+  nome          String
+  fotoUrl       String?
+  registradoEm  DateTime @default(now())
+  ultimoAcessoEm DateTime?
+  pushToken     String?
+  ativo         Boolean  @default(true)
+  membro        Membro?
+
+  @@index([igrejaId])
+}
+
+model Visitante {
+  id              String   @id @default(cuid())
+  inchurchId      Int?     @unique
+  igrejaId        String
+  igreja          Igreja   @relation(fields: [igrejaId], references: [id])
+  nome            String
+  email           String?
+  telefone        String?
+  dataPrimeiraVisita DateTime?
+  comoConheceu    String?
+  observacoes     String?
+  membroId        String?  // virou membro?
+  criadoEm        DateTime @default(now())
+
+  @@index([igrejaId])
+}
+
+model NovoConvertido {
+  id              String   @id @default(cuid())
+  membroId        String   @unique
+  membro          Membro   @relation(fields: [membroId], references: [id])
+  dataConversao   DateTime
+  pastoral        String?  // quem acompanha
+  observacoes     String?
+  criadoEm        DateTime @default(now())
+}
+
+// =============================================================================
+// ESTRUTURA MINISTERIAL
+// =============================================================================
+
+model GrupoMinisterial {
+  id        String   @id @default(cuid())
+  inchurchId Int?    @unique
+  nome      String
+  descricao String?
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+}
+
+model Equipe {
+  id        String         @id @default(cuid())
+  inchurchId Int?          @unique
+  nome      String
+  descricao String?
+  ativa     Boolean        @default(true)
+  membros   EquipeMembro[]
+  criadaEm  DateTime       @default(now())
+}
+
+model EquipeMembro {
+  id        String   @id @default(cuid())
+  equipeId  String
+  equipe    Equipe   @relation(fields: [equipeId], references: [id], onDelete: Cascade)
+  membroId  String
+  membro    Membro   @relation(fields: [membroId], references: [id])
+  papel     String? // ex: "Coordenador", "Voluntário"
+  criadoEm  DateTime @default(now())
+
+  @@unique([equipeId, membroId])
+}
+
+// =============================================================================
+// CÉLULAS
+// =============================================================================
+
+enum StatusCelula {
+  ATIVA
+  INATIVA
+  EM_MULTIPLICACAO
+  MULTIPLICADA
+}
+
+model Rede {
+  id          String   @id @default(cuid())
+  nome        String   @unique
+  cor         String?
+  supervisor  String?
+  celulas     Celula[]
+  criadaEm    DateTime @default(now())
+}
+
+model Celula {
+  id              String       @id @default(cuid())
+  inchurchId      Int?         @unique
+  igrejaId        String
+  igreja          Igreja       @relation(fields: [igrejaId], references: [id])
+  redeId          String?
+  rede            Rede?        @relation(fields: [redeId], references: [id])
+  nome            String
+  descricao       String?
+  endereco        String?
+  cidade          String?
+  diaSemana       Int?         // 0=domingo
+  horario         String?      // "19:30"
+  status          StatusCelula @default(ATIVA)
+  linkBuscador    String?      // ex: inchur.ch/K58OW
+  criadaEm        DateTime     @default(now())
+
+  participantes   ParticipanteCelula[]
+  visitantesCelula VisitanteCelula[]
+  lideres         LiderancaCelula[]
+  materiais       MaterialApoio[]
+  relatorios      RelatorioCelula[]
+
+  @@index([igrejaId])
+  @@index([status])
+}
+
+model LiderancaCelula {
+  id        String   @id @default(cuid())
+  celulaId  String
+  celula    Celula   @relation(fields: [celulaId], references: [id], onDelete: Cascade)
+  membroId  String
+  membro    Membro   @relation(fields: [membroId], references: [id])
+  papel     String   // "Líder", "Auxiliar", "Supervisor", "Anfitrião"
+  criadoEm  DateTime @default(now())
+
+  @@unique([celulaId, membroId, papel])
+}
+
+model ParticipanteCelula {
+  id          String   @id @default(cuid())
+  celulaId    String
+  celula      Celula   @relation(fields: [celulaId], references: [id], onDelete: Cascade)
+  membroId    String
+  membro      Membro   @relation(fields: [membroId], references: [id])
+  dataEntrada DateTime @default(now())
+  dataSaida   DateTime?
+  ativo       Boolean  @default(true)
+
+  @@unique([celulaId, membroId])
+}
+
+model VisitanteCelula {
+  id        String   @id @default(cuid())
+  celulaId  String
+  celula    Celula   @relation(fields: [celulaId], references: [id])
+  nome      String
+  telefone  String?
+  email     String?
+  visitouEm DateTime @default(now())
+  observacoes String?
+
+  @@index([celulaId])
+}
+
+model MaterialApoio {
+  id        String   @id @default(cuid())
+  celulaId  String?
+  celula    Celula?  @relation(fields: [celulaId], references: [id])
+  titulo    String
+  descricao String?
+  arquivoUrl String?
+  publicadoEm DateTime @default(now())
+}
+
+model RelatorioCelula {
+  id            String   @id @default(cuid())
+  celulaId      String
+  celula        Celula   @relation(fields: [celulaId], references: [id])
+  dataEncontro  DateTime
+  presentes     Int      @default(0)
+  visitantes    Int      @default(0)
+  conversoes    Int      @default(0)
+  observacoes   String?
+  criadoEm      DateTime @default(now())
+
+  @@index([celulaId, dataEncontro])
+}
+
+// =============================================================================
+// EVENTOS
+// =============================================================================
+
+enum StatusInscricao {
+  PENDENTE
+  CONFIRMADA
+  CANCELADA
+  CHECK_IN
+}
+
+model CategoriaEvento {
+  id        String   @id @default(cuid())
+  inchurchId Int?    @unique
+  nome      String   @unique
+  cor       String?
+  icone     String?
+  eventos   Evento[]
+}
+
+model Evento {
+  id              String           @id @default(cuid())
+  inchurchId      Int?             @unique
+  igrejaId        String
+  igreja          Igreja           @relation(fields: [igrejaId], references: [id])
+  categoriaId     String?
+  categoria       CategoriaEvento? @relation(fields: [categoriaId], references: [id])
+  titulo          String
+  slug            String           @unique
+  descricao       String?
+  capaUrl         String?
+  inicio          DateTime
+  fim             DateTime?
+  local           String?
+  endereco        String?
+  recorrente      Boolean          @default(false)
+  recorrenciaJson Json?            // RRULE simplificada
+  inscricoesAbertas Boolean        @default(false)
+  inscricoesAteEm DateTime?
+  publicado       Boolean          @default(true)
+  permiteSemLogin Boolean          @default(false)
+  criadoEm        DateTime         @default(now())
+  atualizadoEm    DateTime         @updatedAt
+
+  lotes           LoteEvento[]
+  ingressos       IngressoEvento[]
+  inscricoes      InscricaoEvento[]
+  perguntas       PerguntaEvento[]
+
+  @@index([igrejaId])
+  @@index([inicio])
+  @@index([publicado])
+}
+
+model LoteEvento {
+  id            String           @id @default(cuid())
+  eventoId      String
+  evento        Evento           @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  nome          String           // ex: "Lote 1 — Antecipado"
+  inicio        DateTime
+  fim           DateTime
+  preco         Decimal          @db.Decimal(10, 2)
+  vagas         Int?
+  vagasUsadas   Int              @default(0)
+  ativo         Boolean          @default(true)
+  ingressos     IngressoEvento[]
+}
+
+model IngressoEvento {
+  id        String      @id @default(cuid())
+  eventoId  String
+  evento    Evento      @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  loteId    String?
+  lote      LoteEvento? @relation(fields: [loteId], references: [id])
+  nome      String      // "Inteira", "Meia", "Estudante"
+  preco     Decimal     @db.Decimal(10, 2)
+  vagas     Int?
+  ativo     Boolean     @default(true)
+  inscricoes InscricaoEvento[]
+}
+
+model PerguntaEvento {
+  id          String           @id @default(cuid())
+  eventoId    String
+  evento      Evento           @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  pergunta    String
+  tipo        String           // "texto", "boolean", "select"
+  opcoesJson  Json?
+  obrigatoria Boolean          @default(false)
+  ordem       Int              @default(0)
+  respostas   RespostaInscricao[]
+}
+
+model InscricaoEvento {
+  id              String           @id @default(cuid())
+  eventoId        String
+  evento          Evento           @relation(fields: [eventoId], references: [id])
+  ingressoId      String?
+  ingresso        IngressoEvento?  @relation(fields: [ingressoId], references: [id])
+  membroId        String?
+  membro          Membro?          @relation(fields: [membroId], references: [id])
+  nomeAvulso      String?          // quando inscrição sem login
+  emailAvulso     String?
+  telefoneAvulso  String?
+  status          StatusInscricao  @default(PENDENTE)
+  qrCode          String           @unique @default(cuid())
+  pagamentoId     String?          // ref Safe2Pay
+  valorPago       Decimal?         @db.Decimal(10, 2)
+  checkInEm       DateTime?
+  respostas       RespostaInscricao[]
+  criadoEm        DateTime         @default(now())
+
+  @@index([eventoId, status])
+  @@index([membroId])
+}
+
+model RespostaInscricao {
+  id           String          @id @default(cuid())
+  inscricaoId  String
+  inscricao    InscricaoEvento @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  perguntaId   String
+  pergunta     PerguntaEvento  @relation(fields: [perguntaId], references: [id])
+  resposta     String
+}
+
+// =============================================================================
+// MÍDIA — Pregações + Banners + Planos de leitura + Downloads + Transmissões
+// =============================================================================
+
+model CategoriaPregacao {
+  id        String     @id @default(cuid())
+  inchurchId Int?      @unique
+  nome      String     @unique
+  pregacoes Pregacao[]
+}
+
+model SeriePregacao {
+  id        String     @id @default(cuid())
+  inchurchId Int?      @unique
+  titulo    String
+  descricao String?
+  capaUrl   String?
+  criadaEm  DateTime   @default(now())
+  pregacoes Pregacao[]
+}
+
+model Pregacao {
+  id            String             @id @default(cuid())
+  inchurchId    Int?               @unique
+  igrejaId      String?
+  igreja        Igreja?            @relation(fields: [igrejaId], references: [id])
+  serieId       String?
+  serie         SeriePregacao?     @relation(fields: [serieId], references: [id])
+  categoriaId   String?
+  categoria     CategoriaPregacao? @relation(fields: [categoriaId], references: [id])
+  titulo        String
+  pregador      String?
+  data          DateTime?
+  youtubeId     String?
+  soundcloudId  String?
+  descricao     String?
+  capaUrl       String?
+  duracaoSeg    Int?
+  execucoes     Int                @default(0)
+  publicada     Boolean            @default(true)
+  criadaEm      DateTime           @default(now())
+  produtosLoja  LojaProduto[]
+
+  @@index([data])
+  @@index([igrejaId])
+}
+
+model Transmissao {
+  id            String   @id @default(cuid())
+  inchurchId    Int?     @unique
+  titulo        String
+  inicio        DateTime
+  fim           DateTime?
+  streamUrl     String?
+  status        String   // "agendada", "ao_vivo", "encerrada"
+  visualizacoes Int      @default(0)
+  criadaEm      DateTime @default(now())
+}
+
+model Banner {
+  id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
+  titulo      String
+  subtitulo   String?
+  imagemUrl   String?
+  linkUrl     String?
+  ordem       Int      @default(0)
+  inicio      DateTime?
+  fim         DateTime?
+  ativo       Boolean  @default(true)
+  cliques     Int      @default(0)
+  criadoEm    DateTime @default(now())
+}
+
+model PlanoLeitura {
+  id        String   @id @default(cuid())
+  inchurchId Int?    @unique
+  titulo    String
+  descricao String?
+  diasJson  Json?    // estrutura dos dias
+  capaUrl   String?
+  publicado Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+}
+
+model Download {
+  id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
+  titulo      String
+  descricao   String?
+  arquivoUrl  String
+  categoria   String?
+  downloads   Int      @default(0)
+  criadoEm    DateTime @default(now())
+}
+
+model Atalho {
+  id        String   @id @default(cuid())
+  titulo    String
+  linkUrl   String
+  icone     String?
+  ordem     Int      @default(0)
+  ativo     Boolean  @default(true)
+}
+
+// =============================================================================
+// COMUNICAÇÃO — Push notifications
+// =============================================================================
+
+enum PushAlvo {
+  TODOS
+  IGREJA
+  MEMBROS
+  USUARIOS_APP
+  CELULA
+  CUSTOM
+}
+
+model PushNotification {
+  id          String   @id @default(cuid())
+  igrejaId    String?
+  igreja      Igreja?  @relation(fields: [igrejaId], references: [id])
+  titulo      String
+  corpo       String
+  alvo        PushAlvo @default(TODOS)
+  filtroJson  Json?
+  agendadoPara DateTime?
+  enviadoEm   DateTime?
+  totalEnviado Int     @default(0)
+  totalAbertura Int    @default(0)
+  criadoPor   String?
+  criadoEm    DateTime @default(now())
+
+  @@index([agendadoPara])
+}
+
+// =============================================================================
+// INTERCESSÃO
+// =============================================================================
+
+enum StatusOracao {
+  ABERTO
+  EM_ORACAO
+  RESPONDIDO
+  ARQUIVADO
+}
+
+model Sentimento {
+  id        String   @id @default(cuid())
+  inchurchId Int?    @unique
+  nome      String   @unique
+  emoji     String?
+  cor       String?
+  pedidos   PedidoOracao[]
+}
+
+model PedidoOracao {
+  id            String       @id @default(cuid())
+  inchurchId    Int?         @unique
+  membroId      String?
+  membro        Membro?      @relation(fields: [membroId], references: [id])
+  nomeAvulso    String?
+  pedido        String
+  sentimentoId  String?
+  sentimento    Sentimento?  @relation(fields: [sentimentoId], references: [id])
+  status        StatusOracao @default(ABERTO)
+  intercessorId String?
+  respostas     RespostaOracao[]
+  criadoEm      DateTime     @default(now())
+
+  @@index([status])
+}
+
+model RespostaOracao {
+  id           String       @id @default(cuid())
+  pedidoId     String
+  pedido       PedidoOracao @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  texto        String
+  autorId      String?
+  criadoEm     DateTime     @default(now())
+}
+
+model Testemunho {
+  id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
+  membroId    String?
+  membro      Membro?  @relation(fields: [membroId], references: [id])
+  nomeAvulso  String?
+  texto       String
+  publicado   Boolean  @default(false)  // public_testimony flag
+  destaque    Boolean  @default(false)
+  curtidas    Int      @default(0)
+  criadoEm    DateTime @default(now())
+
+  @@index([publicado])
+}
+
+model EscalaIntercessao {
+  id          String   @id @default(cuid())
+  diaSemana   Int      // 0=domingo
+  hora        Int      // 0-23
+  intercessorId String
+  ativo       Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+
+  @@unique([diaSemana, hora, intercessorId])
+}
+
+// =============================================================================
+// FINANCEIRO + DOAÇÕES (Safe2Pay)
+// =============================================================================
+
+enum TipoLancamento {
+  ENTRADA
+  SAIDA
+}
+
+enum StatusLancamento {
+  PENDENTE
+  CONCILIADO
+  CANCELADO
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+  TRANSFERENCIA
+  OFERTA
+}
+
+model CategoriaFinanceira {
+  id        String           @id @default(cuid())
+  nome      String           @unique
+  tipo      TipoLancamento
+  cor       String?
+  lancamentos LancamentoFinanceiro[]
+}
+
+model ContaBancaria {
+  id            String   @id @default(cuid())
+  igrejaId      String?
+  igreja        Igreja?  @relation(fields: [igrejaId], references: [id])
+  nome          String
+  banco         String?
+  agencia       String?
+  conta         String?
+  saldoInicial  Decimal  @db.Decimal(12, 2) @default(0)
+  ativa         Boolean  @default(true)
+  lancamentos   LancamentoFinanceiro[]
+}
+
+model Fornecedor {
+  id        String   @id @default(cuid())
+  nome      String
+  documento String?
+  email     String?
+  telefone  String?
+  lancamentos LancamentoFinanceiro[]
+  criadoEm  DateTime @default(now())
+}
+
+model LancamentoFinanceiro {
+  id              String              @id @default(cuid())
+  inchurchId      Int?                @unique
+  igrejaId        String
+  igreja          Igreja              @relation(fields: [igrejaId], references: [id])
+  categoriaId     String?
+  categoria       CategoriaFinanceira? @relation(fields: [categoriaId], references: [id])
+  contaId         String?
+  conta           ContaBancaria?      @relation(fields: [contaId], references: [id])
+  fornecedorId    String?
+  fornecedor      Fornecedor?         @relation(fields: [fornecedorId], references: [id])
+  tipo            TipoLancamento
+  status          StatusLancamento    @default(PENDENTE)
+  formaPagamento  FormaPagamento?
+  valor           Decimal             @db.Decimal(12, 2)
+  data            DateTime
+  descricao       String?
+  comprovanteUrl  String?
+  doacaoId        String?             @unique
+  doacao          Doacao?             @relation(fields: [doacaoId], references: [id])
+  criadoEm        DateTime            @default(now())
+
+  @@index([igrejaId, data])
+  @@index([status])
+}
+
+model Campanha {
+  id          String    @id @default(cuid())
+  igrejaId    String?
+  igreja      Igreja?   @relation(fields: [igrejaId], references: [id])
+  titulo      String
+  slug        String    @unique
+  descricao   String?
+  capaUrl     String?
+  meta        Decimal?  @db.Decimal(12, 2)
+  arrecadado  Decimal   @db.Decimal(12, 2) @default(0)
+  inicio      DateTime?
+  fim         DateTime?
+  ativa       Boolean   @default(true)
+  doacoes     Doacao[]
+  criadaEm    DateTime  @default(now())
+}
+
+enum StatusDoacao {
+  PENDENTE
+  PAGA
+  FALHOU
+  REEMBOLSADA
+  CANCELADA
+}
+
+enum FrequenciaDoacao {
+  AVULSA
+  MENSAL
+  ANUAL
+}
+
+model Doacao {
+  id              String           @id @default(cuid())
+  igrejaId        String
+  igreja          Igreja           @relation(fields: [igrejaId], references: [id])
+  membroId        String?
+  membro          Membro?          @relation(fields: [membroId], references: [id])
+  campanhaId      String?
+  campanha        Campanha?        @relation(fields: [campanhaId], references: [id])
+  nomeDoador      String
+  emailDoador     String
+  telefoneDoador  String?
+  documento       String?
+  valor           Decimal          @db.Decimal(12, 2)
+  frequencia      FrequenciaDoacao @default(AVULSA)
+  status          StatusDoacao     @default(PENDENTE)
+  formaPagamento  FormaPagamento
+  safe2payId      String?          @unique
+  safe2payJson    Json?
+  pagaEm          DateTime?
+  observacoes     String?
+  criadaEm        DateTime         @default(now())
+
+  assinaturaId    String?
+  assinatura      Safe2PayAssinatura? @relation(fields: [assinaturaId], references: [id])
+  lancamento      LancamentoFinanceiro?
+
+  @@index([igrejaId])
+  @@index([status])
+}
+
+model Safe2PayAssinatura {
+  id            String           @id @default(cuid())
+  membroId      String?
+  email         String
+  valor         Decimal          @db.Decimal(12, 2)
+  frequencia    FrequenciaDoacao
+  diaMes        Int?             // dia do mês
+  safe2payId    String?          @unique
+  ativa         Boolean          @default(true)
+  iniciadaEm    DateTime         @default(now())
+  canceladaEm   DateTime?
+  doacoes       Doacao[]
+}
+
+// =============================================================================
+// JORNADAS / TRILHAS
+// =============================================================================
+
+enum StatusJornada {
+  EM_ANDAMENTO
+  CONCLUIDA
+  ABANDONADA
+}
+
+model Trilha {
+  id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
+  titulo      String
+  descricao   String?
+  capaUrl     String?
+  ordem       Int      @default(0)
+  ativa       Boolean  @default(true)
+  obrigatoria Boolean  @default(false) // ex: "Boas-vindas"
+  etapas      EtapaTrilha[]
+  pessoas     PessoaJornada[]
+  criadaEm    DateTime @default(now())
+}
+
+model EtapaTrilha {
+  id        String   @id @default(cuid())
+  trilhaId  String
+  trilha    Trilha   @relation(fields: [trilhaId], references: [id], onDelete: Cascade)
+  titulo    String
+  descricao String?
+  ordem     Int      @default(0)
+  conteudoJson Json?
+}
+
+model PessoaJornada {
+  id              String        @id @default(cuid())
+  trilhaId        String
+  trilha          Trilha        @relation(fields: [trilhaId], references: [id])
+  membroId        String
+  membro          Membro        @relation(fields: [membroId], references: [id])
+  status          StatusJornada @default(EM_ANDAMENTO)
+  etapaAtualId    String?
+  iniciadaEm      DateTime      @default(now())
+  concluidaEm     DateTime?
+  avaliacoes      AvaliacaoTrilha[]
+
+  @@unique([trilhaId, membroId])
+}
+
+model AvaliacaoTrilha {
+  id              String        @id @default(cuid())
+  pessoaJornadaId String
+  pessoaJornada   PessoaJornada @relation(fields: [pessoaJornadaId], references: [id], onDelete: Cascade)
+  nota            Int           // 1-5
+  comentario      String?
+  criadaEm        DateTime      @default(now())
+}
+
+// =============================================================================
+// KIDS — Ministério Infantil (substitui R$59,90/mês InChurch Kids)
+// =============================================================================
+
+enum FaixaEtariaKids {
+  BERCARIO     // 0-2 anos
+  MATERNAL     // 3-5
+  KIDS_1       // 6-8
+  KIDS_2       // 9-11
+}
+
+model KidsCrianca {
+  id              String          @id @default(cuid())
+  igrejaId        String
+  igreja          Igreja          @relation(fields: [igrejaId], references: [id])
+  nome            String
+  dataNascimento  DateTime
+  fotoUrl         String?
+  faixaEtaria     FaixaEtariaKids
+  autorizaImagem  Boolean         @default(false)
+  alergias        String?
+  restricoesAlim  String?
+  necessidadesEsp String?
+  observacoes     String?
+  autonomiaEntrada Boolean        @default(false) // pode entrar/sair sozinho
+  ativa           Boolean         @default(true)
+  responsaveis    KidsResponsavel[]
+  checkins        KidsCheckin[]
+  criadoEm        DateTime        @default(now())
+  atualizadoEm    DateTime        @updatedAt
+
+  @@index([igrejaId])
+}
+
+model KidsResponsavel {
+  id          String      @id @default(cuid())
+  criancaId   String
+  crianca     KidsCrianca @relation(fields: [criancaId], references: [id], onDelete: Cascade)
+  membroId    String?
+  membro      Membro?     @relation(fields: [membroId], references: [id])
+  nome        String      // nome do responsável (membro ou avulso)
+  parentesco  String      // "Mãe", "Pai", "Avó", "Tutor"
+  documento   String?
+  telefone    String?
+  email       String?
+  podeBuscar  Boolean     @default(true)
+  principal   Boolean     @default(false)
+  criadoEm    DateTime    @default(now())
+
+  @@index([criancaId])
+}
+
+model KidsTurma {
+  id            String           @id @default(cuid())
+  igrejaId      String
+  igreja        Igreja           @relation(fields: [igrejaId], references: [id])
+  nome          String
+  faixaEtaria   FaixaEtariaKids
+  sala          String?
+  capacidade    Int?
+  ativa         Boolean          @default(true)
+  checkins      KidsCheckin[]
+}
+
+model KidsCheckin {
+  id            String      @id @default(cuid())
+  criancaId     String
+  crianca       KidsCrianca @relation(fields: [criancaId], references: [id])
+  turmaId       String
+  turma         KidsTurma   @relation(fields: [turmaId], references: [id])
+  entradaEm     DateTime    @default(now())
+  saidaEm       DateTime?
+  retiradaPor   String?     // nome de quem buscou
+  retiradaDoc   String?
+  etiquetaCode  String      @unique @default(cuid())
+  observacoes   String?
+
+  @@index([criancaId, entradaEm])
+}
+
+// =============================================================================
+// LOJA MARANATA (white-label, vs R$259,90/mês InChurch Loja)
+// =============================================================================
+
+model LojaCategoria {
+  id        String        @id @default(cuid())
+  nome      String        @unique
+  slug      String        @unique
+  ordem     Int           @default(0)
+  ativa     Boolean       @default(true)
+  produtos  LojaProduto[]
+}
+
+enum StatusProduto {
+  ATIVO
+  RASCUNHO
+  ESGOTADO
+  DESCONTINUADO
+}
+
+model LojaProduto {
+  id              String         @id @default(cuid())
+  categoriaId     String?
+  categoria       LojaCategoria? @relation(fields: [categoriaId], references: [id])
+  nome            String
+  slug            String         @unique
+  descricao       String?
+  preco           Decimal        @db.Decimal(10, 2)
+  precoPromocional Decimal?      @db.Decimal(10, 2)
+  imagensJson     Json?          // [url1, url2...]
+  estoque         Int?           // null = sem controle (dropshipping)
+  fornecedorExterno String?      // nome do fornecedor catálogo
+  status          StatusProduto  @default(RASCUNHO)
+  vinculadoPregacaoId String?    // pregação que cita o produto
+  pregacao        Pregacao?      @relation(fields: [vinculadoPregacaoId], references: [id], map: "LojaProduto_pregacao_fkey")
+  itens           LojaItemPedido[]
+  criadoEm        DateTime       @default(now())
+  atualizadoEm    DateTime       @updatedAt
+}
+
+enum StatusPedido {
+  CARRINHO
+  AGUARDANDO_PAGAMENTO
+  PAGO
+  EM_SEPARACAO
+  ENVIADO
+  ENTREGUE
+  CANCELADO
+  REEMBOLSADO
+}
+
+model LojaPedido {
+  id              String       @id @default(cuid())
+  igrejaId        String?
+  igreja          Igreja?      @relation(fields: [igrejaId], references: [id])
+  numero          Int          @unique @default(autoincrement())
+  email           String
+  nome            String
+  telefone        String?
+  documento       String?
+  enderecoJson    Json?
+  status          StatusPedido @default(CARRINHO)
+  subtotal        Decimal      @db.Decimal(10, 2) @default(0)
+  frete           Decimal      @db.Decimal(10, 2) @default(0)
+  desconto        Decimal      @db.Decimal(10, 2) @default(0)
+  total           Decimal      @db.Decimal(10, 2) @default(0)
+  safe2payId      String?      @unique
+  pagoEm          DateTime?
+  enviadoEm       DateTime?
+  rastreamento    String?
+  itens           LojaItemPedido[]
+  criadoEm        DateTime     @default(now())
+  atualizadoEm    DateTime     @updatedAt
+}
+
+model LojaItemPedido {
+  id          String       @id @default(cuid())
+  pedidoId    String
+  pedido      LojaPedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produtoId   String
+  produto     LojaProduto  @relation(fields: [produtoId], references: [id])
+  quantidade  Int
+  precoUnit   Decimal      @db.Decimal(10, 2)
+  total       Decimal      @db.Decimal(10, 2)
+}
+
+// =============================================================================
+// SISTEMA — Audit log + Feature flags + Import log + Referência InChurch
+// =============================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  acao      String   // "criou", "editou", "deletou", "login"
+  recurso   String   // "Membro", "Doacao", etc
+  recursoId String?
+  diffJson  Json?
+  ip        String?
+  userAgent String?
+  criadoEm  DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([recurso, recursoId])
+  @@index([criadoEm])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  chave     String   @unique
+  habilitada Boolean @default(false)
+  descricao String?
+  criadaEm  DateTime @default(now())
+  atualizadaEm DateTime @updatedAt
+}
+
+model ImportacaoLog {
+  id          String   @id @default(cuid())
+  fonte       String   // "InChurch", "XLSX", "manual"
+  tipo        String   // "membros", "celulas", etc
+  totalLinhas Int      @default(0)
+  sucesso     Int      @default(0)
+  erros       Int      @default(0)
+  detalhesJson Json?
+  iniciadaEm  DateTime @default(now())
+  concluidaEm DateTime?
+}
+
+// =============================================================================
+// REFERÊNCIA InChurch — congelado pra cross-ref/migração (não escrever ativo)
+// =============================================================================
+
+model InChurchSnapshot {
+  id          String   @id @default(cuid())
+  tipo        String   // "feature_flag", "nomenclatura", "modulo_acesso", "endpoint"
+  chave       String
+  valorJson   Json
+  capturadoEm DateTime @default(now())
+
+  @@unique([tipo, chave])
+}

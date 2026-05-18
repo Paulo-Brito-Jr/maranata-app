@@ -1,0 +1,103 @@
+import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const UNIDADES = [
+  "Sede Tijuca",
+  "Méier",
+  "Duque de Caxias",
+  "Copacabana",
+  "Jacarepaguá",
+  "Irajá",
+  "Campo Grande",
+  "São João de Meriti",
+  "Recreio",
+  "Nova Iguaçu",
+  "Jardim Primavera",
+  "Vila São Luiz",
+  "Lote XV",
+  "Rio das Ostras",
+];
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen">
+      <header className="faixa-brand text-brand-blue-foreground">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-white/20 backdrop-blur" aria-hidden />
+            <div>
+              <div className="text-sm uppercase tracking-widest opacity-80">IME</div>
+              <div className="text-lg font-semibold">Maranata App</div>
+            </div>
+          </div>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/eventos" className="hover:underline">
+              Eventos
+            </Link>
+            <Link href="/doar" className="hover:underline">
+              Doar
+            </Link>
+            <Link href="/login" className="rounded-full bg-white/20 px-4 py-1.5 hover:bg-white/30">
+              Entrar
+            </Link>
+            <ThemeToggle />
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-12 md:grid-cols-2 md:items-center">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-widest text-brand-orange">
+              Igreja Missionária Evangélica Maranata
+            </p>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight md:text-5xl">
+              Tudo da sua igreja num só lugar.
+            </h1>
+            <p className="mt-5 text-lg text-muted-foreground">
+              15 unidades · 2.731 membros · 6.662 usuários no app. Eventos, células,
+              pregações, intercessão e contribuição — feitos por nós, pra nós.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/doar"
+                className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground shadow-lg shadow-primary/30 transition hover:opacity-90"
+              >
+                🤝 Seja parceiro da Maranata
+              </Link>
+              <Link
+                href="/eventos"
+                className="rounded-full border border-border bg-card px-6 py-3 font-medium hover:bg-secondary"
+              >
+                Ver eventos
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3 rounded-3xl border border-border bg-card p-6 shadow-xl shadow-brand-blue/10">
+            <h2 className="text-lg font-semibold">Nossas unidades</h2>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              {UNIDADES.map((u) => (
+                <li key={u} className="flex items-center gap-2 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-brand-orange" />
+                  {u}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Sede administrativa: Rua Conde de Bonfim, 229 · Tijuca · RJ
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
+        <p>
+          © {new Date().getFullYear()} Igreja Missionária Evangélica Maranata · CNPJ
+          42.117.804/0001-15
+        </p>
+        <p className="mt-1 text-xs opacity-70">v0.1 · plataforma própria em construção</p>
+      </footer>
+    </main>
+  );
+}
