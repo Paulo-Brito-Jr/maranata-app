@@ -1,0 +1,83 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { Field, Input, Select, Textarea, Button } from "@/components/ui/field";
+import { criarEvento } from "../actions";
+
+export const metadata = { title: "Novo evento" };
+
+export default async function NovoEventoPage() {
+  const [igrejas, categorias] = await Promise.all([
+    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.categoriaEvento.findMany({ orderBy: { nome: "asc" } }),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <header>
+        <Link href="/admin/eventos" className="text-sm text-muted-foreground hover:text-primary">
+          ← Voltar
+        </Link>
+        <h1 className="mt-2 text-3xl font-bold">Novo evento</h1>
+      </header>
+
+      <form action={criarEvento} className="space-y-5 rounded-2xl border border-border bg-card p-6">
+        <Field label="Título" required>
+          <Input name="titulo" required />
+        </Field>
+        <Field label="Slug (URL)" hint="só letras minúsculas, números e hífen" required>
+          <Input name="slug" required />
+        </Field>
+        <Field label="Descrição">
+          <Textarea name="descricao" rows={3} />
+        </Field>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Igreja" required>
+            <Select name="igrejaId" required>
+              <option value="">Selecione...</option>
+              {igrejas.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.nome}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Categoria">
+            <Select name="categoriaId" defaultValue="">
+              <option value="">Sem categoria</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Início" required>
+            <Input type="datetime-local" name="inicio" required />
+          </Field>
+          <Field label="Fim">
+            <Input type="datetime-local" name="fim" />
+          </Field>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Local">
+            <Input name="local" placeholder="Sede - Auditório principal" />
+          </Field>
+          <Field label="Endereço">
+            <Input name="endereco" />
+          </Field>
+        </div>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="publicado" defaultChecked /> Publicar
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="inscricoesAbertas" /> Abrir inscrições
+          </label>
+        </div>
+        <Button type="submit">Criar evento</Button>
+      </form>
+    </div>
+  );
+}
