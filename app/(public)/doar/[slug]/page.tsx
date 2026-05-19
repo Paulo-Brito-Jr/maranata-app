@@ -78,15 +78,35 @@ export default async function DoarCampanhaPage({
         <input type="hidden" name="campanhaId" value={campanha.id} />
         <h2 className="text-lg font-semibold">Sua contribuição</h2>
 
+        <div className="grid grid-cols-3 gap-2">
+          {[50, 100, 200].map((v) => (
+            <label
+              key={v}
+              className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10"
+            >
+              <input type="radio" name="valor" value={v} className="sr-only" />
+              <span className="font-semibold">R$ {v}</span>
+            </label>
+          ))}
+        </div>
         <input
           type="number"
           step="0.01"
           min="1"
-          name="valor"
+          name="valorAvulso"
           placeholder="Valor (R$)"
-          required
           className="w-full rounded-xl border border-input bg-background px-3 py-2"
         />
+        <div className="grid grid-cols-2 gap-2">
+          <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
+            <input type="radio" name="frequencia" value="AVULSA" defaultChecked className="sr-only" />
+            <span>Uma vez</span>
+          </label>
+          <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
+            <input type="radio" name="frequencia" value="MENSAL" className="sr-only" />
+            <span>Mensal</span>
+          </label>
+        </div>
         <input
           type="text"
           name="nome"
@@ -99,6 +119,18 @@ export default async function DoarCampanhaPage({
           name="email"
           placeholder="Seu e-mail"
           required
+          className="w-full rounded-xl border border-input bg-background px-3 py-2"
+        />
+        <input
+          type="tel"
+          name="telefone"
+          placeholder="Seu telefone (opcional)"
+          className="w-full rounded-xl border border-input bg-background px-3 py-2"
+        />
+        <input
+          type="text"
+          name="documento"
+          placeholder="CPF/CNPJ (opcional)"
           className="w-full rounded-xl border border-input bg-background px-3 py-2"
         />
         <button className="w-full rounded-full bg-primary py-3 font-medium text-primary-foreground hover:opacity-90">

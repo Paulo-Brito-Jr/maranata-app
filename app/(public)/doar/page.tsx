@@ -5,7 +5,20 @@ import { brl } from "@/lib/utils";
 export const metadata = { title: "Seja parceiro" };
 export const dynamic = "force-dynamic";
 
-export default async function DoarPage() {
+const erros: Record<string, string> = {
+  valor: "Informe um valor válido para continuar.",
+  email: "Confira o e-mail informado.",
+  checkout: "Não foi possível iniciar o pagamento agora. Tente novamente em instantes.",
+  sede: "A igreja sede ainda não está configurada para receber doações.",
+};
+
+export default async function DoarPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ err?: string }>;
+}) {
+  const params = await searchParams;
+  const erro = params?.err ? erros[params.err] ?? "Não foi possível iniciar a doação." : null;
   const campanhas = await prisma.campanha.findMany({
     where: { ativa: true },
     orderBy: { criadaEm: "desc" },
@@ -24,6 +37,12 @@ export default async function DoarPage() {
         </p>
       </header>
 
+      {erro && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {erro}
+        </div>
+      )}
+
       <form
         action="/api/doacoes/criar"
         method="POST"
@@ -37,7 +56,7 @@ export default async function DoarPage() {
               key={v}
               className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center transition has-[input:checked]:border-primary has-[input:checked]:bg-primary/10"
             >
-              <input type="radio" name="valor" value={v} className="sr-only" />
+              <input type="radio" name="valor" value={v} defaultChecked={v === 100} className="sr-only" />
               <span className="text-lg font-semibold">R$ {v}</span>
             </label>
           ))}
@@ -62,7 +81,7 @@ export default async function DoarPage() {
           </label>
           <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
             <input type="radio" name="frequencia" value="MENSAL" className="sr-only" />
-            <span>Mensalmente</span>
+            <span>Dízimo mensal</span>
           </label>
         </div>
 
@@ -85,6 +104,12 @@ export default async function DoarPage() {
             type="tel"
             name="telefone"
             placeholder="Seu telefone (opcional)"
+            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+          />
+          <input
+            type="text"
+            name="documento"
+            placeholder="CPF/CNPJ (opcional)"
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
           />
         </div>

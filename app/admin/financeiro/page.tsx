@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { brl } from "@/lib/utils";
+import { getAppUrl } from "@/lib/safe2pay/config";
 
 export const metadata = { title: "Financeiro" };
 export const dynamic = "force-dynamic";
@@ -34,6 +35,10 @@ export default async function FinanceiroPage() {
   const entrMes = Number(entradas._sum.valor ?? 0);
   const saiMes = Number(saidas._sum.valor ?? 0);
   const liquido = entrMes - saiMes;
+  const doacaoUrl = `${getAppUrl()}/doar`;
+  const whatsappTexto = encodeURIComponent(
+    `Contribua com a obra da Igreja Missionária Evangélica Maranata: ${doacaoUrl}`,
+  );
 
   return (
     <ModuloShell
@@ -64,6 +69,32 @@ export default async function FinanceiroPage() {
           >
             Ver página pública
           </Link>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Divulgação do link de doações</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use este link em push, WhatsApp, QR Code impresso ou telão. Ele aceita doação avulsa e dízimo mensal.
+            </p>
+            <code className="mt-3 block rounded-xl bg-secondary px-3 py-2 text-sm">{doacaoUrl}</code>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={doacaoUrl}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-secondary"
+            >
+              Abrir link
+            </a>
+            <a
+              href={`https://wa.me/?text=${whatsappTexto}`}
+              className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              Compartilhar no WhatsApp
+            </a>
+          </div>
         </div>
       </section>
 
