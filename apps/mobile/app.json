@@ -37,11 +37,7 @@
     "extra": {
       "router": {
         "origin": "https://maranata.app"
-      },
-      "eas": {
-        "projectId": ""
       }
-    },
-    "owner": "paulo-brito"
+    }
   }
 }
