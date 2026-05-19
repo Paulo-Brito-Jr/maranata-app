@@ -20,18 +20,5 @@
       "autoIncrement": true,
       "channel": "production"
     }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "digital@igrejamaranata.com.br",
-        "ascAppId": "",
-        "appleTeamId": ""
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-play-key.json",
-        "track": "internal"
-      }
-    }
   }
 }
