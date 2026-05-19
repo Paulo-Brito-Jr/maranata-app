@@ -4,7 +4,7 @@ import { verifyMaranataKeyToken } from "@/lib/maranata-key-sso";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const token = url.searchParams.get("token");
+  const token = url.searchParams.get("st") ?? url.searchParams.get("token");
   const next = url.searchParams.get("next") ?? "/";
 
   if (!token) {
