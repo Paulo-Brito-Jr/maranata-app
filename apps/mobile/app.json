@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Maranata",
+    "slug": "maranata-app",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "maranata",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0c0a18"
+    },
+    "ios": {
+      "bundleIdentifier": "org.maranata.app",
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:maranata.app"]
+    },
+    "android": {
+      "package": "org.maranata.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0c0a18"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "router": {
+        "origin": "https://maranata.app"
+      },
+      "eas": {
+        "projectId": ""
+      }
+    },
+    "owner": "paulo-brito"
+  }
+}
