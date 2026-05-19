@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
@@ -48,9 +48,11 @@ export default async function PregacoesPage() {
               className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
             >
               {p.youtubeId ? (
-                <img
+                <Image
                   src={`https://img.youtube.com/vi/${p.youtubeId}/mqdefault.jpg`}
                   alt=""
+                  width={80}
+                  height={80}
                   className="size-20 rounded-xl object-cover"
                 />
               ) : (
