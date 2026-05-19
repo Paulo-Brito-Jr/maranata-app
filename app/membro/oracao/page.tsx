@@ -35,7 +35,12 @@ export default async function MembroOracao() {
   const meusPedidos = membro
     ? await prisma.pedidoOracao.findMany({
         where: { membroId: membro.id },
-        include: { respostas: { select: { id: true } } },
+        include: {
+          respostas: {
+            orderBy: { criadoEm: "desc" },
+            select: { id: true, texto: true, criadoEm: true },
+          },
+        },
         orderBy: { criadoEm: "desc" },
         take: 20,
       })
@@ -93,6 +98,20 @@ export default async function MembroOracao() {
                       <span>{p.respostas.length} resposta(s) recebida(s)</span>
                     )}
                   </footer>
+                  {p.respostas.length > 0 && (
+                    <div className="mt-3 space-y-2 rounded-xl bg-secondary/40 p-3">
+                      {p.respostas.map((resposta) => (
+                        <div key={resposta.id}>
+                          <div className="text-xs text-muted-foreground">
+                            Resposta {dataRelativa(resposta.criadoEm)}
+                          </div>
+                          <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">
+                            {resposta.texto}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               );
             })}

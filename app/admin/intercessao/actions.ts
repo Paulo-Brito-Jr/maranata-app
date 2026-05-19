@@ -7,6 +7,7 @@ import { StatusOracao } from "@prisma/client";
 export async function atualizarStatusPedido(id: string, status: StatusOracao) {
   await prisma.pedidoOracao.update({ where: { id }, data: { status } });
   revalidatePath("/admin/intercessao");
+  revalidatePath("/membro/oracao");
 }
 
 export async function publicarTestemunho(id: string, publicado: boolean) {
@@ -22,4 +23,25 @@ export async function criarPedido(formData: FormData) {
     data: { pedido, nomeAvulso: nome || null },
   });
   revalidatePath("/admin/intercessao");
+}
+
+export async function responderPedido(id: string, formData: FormData) {
+  const texto = String(formData.get("resposta") || "").trim();
+  if (texto.length < 3) return;
+
+  await prisma.$transaction([
+    prisma.respostaOracao.create({
+      data: {
+        pedidoId: id,
+        texto,
+      },
+    }),
+    prisma.pedidoOracao.update({
+      where: { id },
+      data: { status: StatusOracao.RESPONDIDO },
+    }),
+  ]);
+
+  revalidatePath("/admin/intercessao");
+  revalidatePath("/membro/oracao");
 }

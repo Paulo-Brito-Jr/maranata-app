@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { dataPtBR } from "@/lib/utils";
-import { atualizarStatusPedido, publicarTestemunho, criarPedido } from "./actions";
+import { atualizarStatusPedido, publicarTestemunho, criarPedido, responderPedido } from "./actions";
 
 export const metadata = { title: "Intercessão" };
 export const dynamic = "force-dynamic";
@@ -9,7 +9,11 @@ export const dynamic = "force-dynamic";
 export default async function IntercessaoPage() {
   const [pedidos, testemunhos, contagens] = await Promise.all([
     prisma.pedidoOracao.findMany({
-      include: { sentimento: { select: { nome: true, emoji: true } }, membro: { select: { nome: true } } },
+      include: {
+        sentimento: { select: { nome: true, emoji: true } },
+        membro: { select: { nome: true } },
+        respostas: { orderBy: { criadoEm: "desc" }, take: 3 },
+      },
       orderBy: [{ status: "asc" }, { criadoEm: "desc" }],
       take: 50,
     }),
@@ -87,6 +91,18 @@ export default async function IntercessaoPage() {
                   <span className="text-xs text-muted-foreground">{dataPtBR(p.criadoEm)}</span>
                 </div>
                 <p className="mt-2 whitespace-pre-line">{p.pedido}</p>
+                {p.respostas.length > 0 && (
+                  <div className="mt-3 space-y-2 rounded-xl bg-secondary/40 p-3">
+                    {p.respostas.map((resposta) => (
+                      <div key={resposta.id}>
+                        <div className="text-xs text-muted-foreground">
+                          Resposta em {dataPtBR(resposta.criadoEm)}
+                        </div>
+                        <p className="mt-1 whitespace-pre-line text-sm">{resposta.texto}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">{p.status}</span>
                   {p.status === "ABERTO" && (
@@ -111,6 +127,20 @@ export default async function IntercessaoPage() {
                     </form>
                   )}
                 </div>
+                {p.status !== "ARQUIVADO" && (
+                  <form action={responderPedido.bind(null, p.id)} className="mt-3 flex gap-2">
+                    <input
+                      name="resposta"
+                      required
+                      minLength={3}
+                      placeholder="Resposta pastoral/intercessão para este pedido"
+                      className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                    />
+                    <button className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">
+                      Responder
+                    </button>
+                  </form>
+                )}
               </div>
             ))
           )}
