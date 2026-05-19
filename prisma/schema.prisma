@@ -108,6 +108,7 @@ model Usuario {
   atualizadoEm    DateTime     @updatedAt
 
   membro          Membro?
+  pushSubscriptions PushSubscription[]
 
   @@index([papel])
 }
@@ -184,6 +185,7 @@ model UsuarioApp {
   pushToken     String?
   ativo         Boolean  @default(true)
   membro        Membro?
+  pushSubscriptions PushSubscription[]
 
   @@index([igrejaId])
 }
@@ -618,6 +620,26 @@ model PushNotification {
   criadoEm    DateTime @default(now())
 
   @@index([agendadoPara])
+}
+
+model PushSubscription {
+  id            String   @id @default(cuid())
+  usuarioId     String?
+  usuario       Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioAppId  String?
+  usuarioApp    UsuarioApp? @relation(fields: [usuarioAppId], references: [id], onDelete: Cascade)
+  endpoint      String   @unique
+  p256dh        String
+  authKey       String
+  userAgent     String?
+  ativa         Boolean  @default(true)
+  ultimoEnvio   DateTime?
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  @@index([usuarioId])
+  @@index([usuarioAppId])
+  @@index([ativa])
 }
 
 // =============================================================================

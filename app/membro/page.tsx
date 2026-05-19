@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PushToggle } from "@/components/push-toggle";
 
 export const metadata = { title: "Início" };
 
@@ -54,6 +55,8 @@ export default function MembroHome() {
           ))}
         </div>
       </section>
+
+      <PushToggle />
     </div>
   );
 }
