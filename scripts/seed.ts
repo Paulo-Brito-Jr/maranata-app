@@ -66,6 +66,25 @@ const REDES = [
   { nome: "Rede Zona Sul", cor: "#8B5CF6" },
 ];
 
+const CAMPANHAS = [
+  {
+    slug: "obra-maranata-2026",
+    titulo: "Obra Maranata 2026",
+    descricao:
+      "Sustente a expansão das 15 unidades, projetos sociais e missões da IME Maranata em 2026.",
+    meta: 250000,
+    ativa: true,
+  },
+  {
+    slug: "missoes-2026",
+    titulo: "Missões 2026",
+    descricao:
+      "Apoie o envio e a manutenção de missionários da família Maranata pelo Brasil e exterior.",
+    meta: 80000,
+    ativa: true,
+  },
+];
+
 async function main() {
   console.log("🌱 Seeding Maranata App...\n");
 
@@ -122,6 +141,20 @@ async function main() {
     });
   }
   console.log(`  ✓ ${REDES.length} redes`);
+
+  for (const c of CAMPANHAS) {
+    await prisma.campanha.upsert({
+      where: { slug: c.slug },
+      update: {
+        titulo: c.titulo,
+        descricao: c.descricao,
+        meta: c.meta,
+        ativa: c.ativa,
+      },
+      create: c,
+    });
+  }
+  console.log(`  ✓ ${CAMPANHAS.length} campanhas`);
 
   console.log("\n✅ Seed completo!");
 }
