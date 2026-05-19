@@ -1,7 +1,16 @@
 import { ThemeToggle } from "./theme-toggle";
 import type { MKUser } from "@/lib/maranata-key-sso";
+import { RoleBadge } from "./role-badge";
+import { ImpersonarStarter } from "./impersonar-controls";
 
-export function AdminTopbar({ user }: { user: MKUser | null }) {
+export function AdminTopbar({
+  user,
+  realRole,
+}: {
+  user: MKUser | null;
+  realRole?: MKUser["role"];
+}) {
+  const ehSuperReal = realRole === "SUPER_ADMIN";
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background/60 px-6 backdrop-blur">
       <div>
@@ -10,6 +19,8 @@ export function AdminTopbar({ user }: { user: MKUser | null }) {
         </span>
       </div>
       <div className="flex items-center gap-3">
+        <RoleBadge role={user?.role} />
+        {ehSuperReal && <ImpersonarStarter />}
         <ThemeToggle />
         <div className="hidden md:flex flex-col items-end leading-tight">
           <span className="text-sm font-medium">{user?.name ?? "—"}</span>

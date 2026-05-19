@@ -25,6 +25,7 @@ export type PushPayload = {
 export type PushAlvo =
   | { tipo: "TODOS" }
   | { tipo: "USUARIO"; usuarioId: string }
+  | { tipo: "USUARIOS"; usuarioIds: string[] }
   | { tipo: "USUARIO_APP"; usuarioAppId: string }
   | { tipo: "IGREJA"; igrejaId: string };
 
@@ -40,6 +41,8 @@ export async function enviarPush(
         return { ativa: true };
       case "USUARIO":
         return { ativa: true, usuarioId: alvo.usuarioId };
+      case "USUARIOS":
+        return { ativa: true, usuarioId: { in: alvo.usuarioIds } };
       case "USUARIO_APP":
         return { ativa: true, usuarioAppId: alvo.usuarioAppId };
       case "IGREJA":

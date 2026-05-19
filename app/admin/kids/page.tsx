@@ -1,122 +1,175 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
-import { dataPtBR } from "@/lib/utils";
-import { Field, Input, Select, Button } from "@/components/ui/field";
-import { criarCrianca } from "./actions";
+import {
+  Baby,
+  ScanLine,
+  LogOut,
+  Users,
+  AlertTriangle,
+  Tag,
+  Layers,
+} from "lucide-react";
 
 export const metadata = { title: "Kids" };
 export const dynamic = "force-dynamic";
 
-export default async function KidsPage() {
-  const [criancas, turmas, checkinsHoje, igrejas] = await Promise.all([
-    prisma.kidsCrianca.findMany({
+export default async function KidsHub() {
+  const inicioHoje = new Date();
+  inicioHoje.setHours(0, 0, 0, 0);
+
+  const [
+    totalCriancas,
+    totalTurmas,
+    ativosAgora,
+    checkinsHoje,
+    comAlergias,
+    salasComAtivos,
+  ] = await Promise.all([
+    prisma.kidsCrianca.count({ where: { ativa: true } }),
+    prisma.kidsTurma.count({ where: { ativa: true } }),
+    prisma.kidsCheckin.count({ where: { saidaEm: null } }),
+    prisma.kidsCheckin.count({ where: { entradaEm: { gte: inicioHoje } } }),
+    prisma.kidsCrianca.count({
+      where: { ativa: true, NOT: [{ alergias: null }, { alergias: "" }] },
+    }),
+    prisma.kidsTurma.findMany({
+      where: {
+        ativa: true,
+        checkins: { some: { saidaEm: null } },
+      },
       include: {
         igreja: { select: { nome: true } },
-        responsaveis: { where: { principal: true }, take: 1 },
+        _count: { select: { checkins: { where: { saidaEm: null } } } },
       },
       orderBy: { nome: "asc" },
-      take: 50,
     }),
-    prisma.kidsTurma.count({ where: { ativa: true } }),
-    prisma.kidsCheckin.count({
-      where: { entradaEm: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
-    }),
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
   ]);
 
   return (
     <ModuloShell
       titulo="Kids"
-      descricao="Check-in/out via QR, etiquetas com alergias, autorização de imagem, turmas por faixa etária."
+      descricao="Check-in/out via QR, etiqueta com alergias visíveis, controle de retirada, sala ao vivo e emergência."
       stats={[
-        { label: "Crianças cadastradas", valor: criancas.length },
-        { label: "Turmas ativas", valor: turmas },
+        { label: "Crianças ativas", valor: totalCriancas },
+        { label: "Turmas", valor: totalTurmas },
+        { label: "Ativos AGORA", valor: ativosAgora, ref: "em sala" },
         { label: "Check-ins hoje", valor: checkinsHoje },
-        { label: "Economia anual", valor: "R$ 718,80", ref: "vs InChurch Kids" },
+        { label: "Com alergias", valor: comAlergias, ref: "atenção redobrada" },
+      ]}
+      acoes={[
+        { href: "/admin/kids/checkin", label: "Iniciar check-in" },
+        { href: "/admin/kids/checkout", label: "Retirar criança" },
       ]}
     >
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="mb-3 font-semibold">Cadastrar criança</h2>
-        <form action={criarCrianca} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Nome" required>
-              <Input name="nome" required />
-            </Field>
-            <Field label="Igreja" required>
-              <Select name="igrejaId" required>
-                <option value="">Selecione...</option>
-                {igrejas.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.nome}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Data de nascimento" required>
-              <Input type="date" name="dataNascimento" required />
-            </Field>
-            <Field label="Faixa etária" required>
-              <Select name="faixaEtaria" required>
-                <option value="BERCARIO">Berçário (0-2)</option>
-                <option value="MATERNAL">Maternal (3-5)</option>
-                <option value="KIDS_1">Kids 1 (6-8)</option>
-                <option value="KIDS_2">Kids 2 (9-11)</option>
-              </Select>
-            </Field>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Alergias">
-              <Input name="alergias" placeholder="Ex: amendoim, lactose..." />
-            </Field>
-            <Field label="Restrições alimentares">
-              <Input name="restricoesAlim" />
-            </Field>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Nome do responsável" required>
-              <Input name="nomeResp" required />
-            </Field>
-            <Field label="Telefone do responsável">
-              <Input type="tel" name="telefoneResp" />
-            </Field>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="autorizaImagem" /> Autorizo uso de imagem
-          </label>
-          <Button type="submit">Cadastrar criança</Button>
-        </form>
+      <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <AtalhoCard
+          href="/admin/kids/checkin"
+          titulo="Check-in"
+          desc="Receber criança e gerar ticket de retirada"
+          icon={ScanLine}
+          destacar
+        />
+        <AtalhoCard
+          href="/admin/kids/checkout"
+          titulo="Retirada"
+          desc="Validar ticket QR e liberar"
+          icon={LogOut}
+        />
+        <AtalhoCard
+          href="/admin/kids/criancas"
+          titulo="Crianças"
+          desc={`Cadastro e ficha (${totalCriancas})`}
+          icon={Baby}
+        />
+        <AtalhoCard
+          href="/admin/kids/turmas"
+          titulo="Turmas / Salas"
+          desc={`Gerenciar salas (${totalTurmas})`}
+          icon={Layers}
+        />
+        <AtalhoCard
+          href="/admin/kids/historico"
+          titulo="Histórico"
+          desc="Buscar check-ins anteriores"
+          icon={Users}
+        />
       </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-widest text-muted-foreground">
-          Crianças cadastradas
-        </h2>
-        {criancas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma criança ainda.</p>
-        ) : (
-          <div className="grid gap-2 md:grid-cols-2">
-            {criancas.map((c) => (
-              <div key={c.id} className="rounded-2xl border border-border bg-card p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{c.nome}</span>
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-                    {c.faixaEtaria.toLowerCase()}
-                  </span>
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {c.igreja.nome} · {dataPtBR(c.dataNascimento)}
-                  {c.alergias && <span className="ml-2 text-destructive">⚠ {c.alergias}</span>}
-                </div>
-                {c.responsaveis[0] && (
-                  <div className="mt-1 text-xs">Resp.: {c.responsaveis[0].nome}</div>
-                )}
-              </div>
+      {salasComAtivos.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-widest text-muted-foreground">
+            Salas com crianças agora
+          </h2>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {salasComAtivos.map((t) => (
+              <li key={t.id}>
+                <Link
+                  href={`/admin/kids/sala/${t.id}`}
+                  className="flex items-center justify-between rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 transition hover:bg-emerald-500/15"
+                >
+                  <div>
+                    <p className="font-semibold">{t.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t.igreja.nome} · {t.faixaEtaria}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-emerald-950">
+                      {t._count.checkins} em sala
+                    </span>
+                    <Tag className="size-4 text-emerald-300" />
+                  </div>
+                </Link>
+              </li>
             ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-400" />
+          <div className="text-sm">
+            <p className="font-medium text-amber-200">Protocolo de retirada</p>
+            <p className="mt-1 text-amber-300/80">
+              Nenhuma criança sai sem o ticket QR conferido. Em emergência, use o botão dentro da
+              sala — ele dispara push pra todos os responsáveis e alerta a diretoria.
+            </p>
           </div>
-        )}
+        </div>
       </section>
     </ModuloShell>
+  );
+}
+
+function AtalhoCard({
+  href,
+  titulo,
+  desc,
+  icon: Icon,
+  destacar,
+}: {
+  href: string;
+  titulo: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  destacar?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 rounded-2xl border p-4 transition ${
+        destacar
+          ? "border-primary/40 bg-primary/10 hover:bg-primary/15"
+          : "border-border bg-card hover:border-primary/40 hover:bg-secondary/40"
+      }`}
+    >
+      <Icon className="size-6 text-primary" />
+      <div>
+        <p className="font-medium">{titulo}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>
+      </div>
+    </Link>
   );
 }

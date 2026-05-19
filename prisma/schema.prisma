@@ -52,6 +52,7 @@ model Igreja {
   kidsCriancas        KidsCrianca[]
   kidsTurmas          KidsTurma[]
   lojaPedidos         LojaPedido[]
+  ebdClasses          EbdClasse[]
 
   @@index([regionalId])
 }
@@ -152,6 +153,10 @@ model Membro {
   estado          String?
   cep             String?
 
+  optDiretorio    Boolean       @default(false)
+  optAniversario  Boolean       @default(true)
+  bio             String?
+
   criadoEm        DateTime      @default(now())
   atualizadoEm    DateTime      @updatedAt
 
@@ -165,6 +170,16 @@ model Membro {
   novoConvertido  NovoConvertido?
   equipes         EquipeMembro[]
   liderancas      LiderancaCelula[]
+  pregacaoFavoritas PregacaoFavorita[]
+  pregacaoProgressos PregacaoProgresso[]
+  pregacaoComentarios PregacaoComentario[]
+  planoLeituraInscricoes PlanoLeituraInscricao[]
+  devocionalReacoes DevocionalReacao[]
+  bibliaBookmarks BibliaBookmark[]
+  ebdInscricoes EbdInscricao[]
+  ibmCursoMatriculas IbmMatriculaCurso[] @relation("IbmCursoMatricula")
+  ibmTurmaMatriculas IbmMatricula[] @relation("IbmTurmaMatricula")
+  ibmProfessor IbmProfessor?
 
   @@index([igrejaId])
   @@index([status])
@@ -528,9 +543,52 @@ model Pregacao {
   publicada     Boolean            @default(true)
   criadaEm      DateTime           @default(now())
   produtosLoja  LojaProduto[]
+  favoritos     PregacaoFavorita[]
+  progressos    PregacaoProgresso[]
+  comentarios   PregacaoComentario[]
 
   @@index([data])
   @@index([igrejaId])
+}
+
+model PregacaoFavorita {
+  id          String   @id @default(cuid())
+  pregacaoId  String
+  pregacao    Pregacao @relation(fields: [pregacaoId], references: [id], onDelete: Cascade)
+  membroId    String
+  membro      Membro   @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  criadoEm    DateTime @default(now())
+
+  @@unique([pregacaoId, membroId])
+  @@index([membroId])
+}
+
+model PregacaoProgresso {
+  id            String   @id @default(cuid())
+  pregacaoId    String
+  pregacao      Pregacao @relation(fields: [pregacaoId], references: [id], onDelete: Cascade)
+  membroId      String
+  membro        Membro   @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  posicaoSeg    Int      @default(0)
+  concluido     Boolean  @default(false)
+  ultimaVistaEm DateTime @default(now())
+
+  @@unique([pregacaoId, membroId])
+  @@index([membroId, ultimaVistaEm])
+}
+
+model PregacaoComentario {
+  id          String   @id @default(cuid())
+  pregacaoId  String
+  pregacao    Pregacao @relation(fields: [pregacaoId], references: [id], onDelete: Cascade)
+  membroId    String?
+  membro      Membro?  @relation(fields: [membroId], references: [id])
+  nomeAvulso  String?
+  texto       String
+  aprovado    Boolean  @default(false)
+  criadoEm    DateTime @default(now())
+
+  @@index([pregacaoId, aprovado])
 }
 
 model Transmissao {
@@ -565,10 +623,65 @@ model PlanoLeitura {
   inchurchId Int?    @unique
   titulo    String
   descricao String?
-  diasJson  Json?    // estrutura dos dias
+  diasJson  Json?    // estrutura dos dias [{ dia: 1, livro: "joao", capitulos: [1,2] }]
   capaUrl   String?
   publicado Boolean  @default(true)
   criadoEm  DateTime @default(now())
+  inscricoes PlanoLeituraInscricao[]
+}
+
+model PlanoLeituraInscricao {
+  id              String       @id @default(cuid())
+  planoId         String
+  plano           PlanoLeitura @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  membroId        String
+  membro          Membro       @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  iniciadaEm      DateTime     @default(now())
+  diaAtual        Int          @default(1)
+  diasConcluidos  Int[]        @default([])
+  concluidaEm     DateTime?
+
+  @@unique([planoId, membroId])
+}
+
+model Devocional {
+  id              String   @id @default(cuid())
+  data            DateTime @unique @db.Date
+  versiculoRef    String   // "Jo 3.16"
+  versiculoTexto  String
+  titulo          String
+  texto           String   // markdown
+  autor           String?
+  capaUrl         String?
+  publicado       Boolean  @default(true)
+  criadoEm        DateTime @default(now())
+  reacoes         DevocionalReacao[]
+}
+
+model DevocionalReacao {
+  id            String     @id @default(cuid())
+  devocionalId  String
+  devocional    Devocional @relation(fields: [devocionalId], references: [id], onDelete: Cascade)
+  membroId      String
+  membro        Membro     @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  tipo          String     // amem, abencoado, orei
+  criadoEm      DateTime   @default(now())
+
+  @@unique([devocionalId, membroId, tipo])
+}
+
+model BibliaBookmark {
+  id          String   @id @default(cuid())
+  membroId    String
+  membro      Membro   @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  livro       String
+  capitulo    Int
+  versiculo   Int
+  cor         String?
+  nota        String?
+  criadoEm    DateTime @default(now())
+
+  @@index([membroId, livro, capitulo])
 }
 
 model Download {
@@ -610,6 +723,7 @@ model PushNotification {
   igreja      Igreja?  @relation(fields: [igrejaId], references: [id])
   titulo      String
   corpo       String
+  url         String?
   alvo        PushAlvo @default(TODOS)
   filtroJson  Json?
   agendadoPara DateTime?
@@ -617,9 +731,43 @@ model PushNotification {
   totalEnviado Int     @default(0)
   totalAbertura Int    @default(0)
   criadoPor   String?
+  templateId  String?
+  template    PushTemplate? @relation(fields: [templateId], references: [id])
   criadoEm    DateTime @default(now())
 
   @@index([agendadoPara])
+  @@index([enviadoEm])
+}
+
+model PushTemplate {
+  id           String   @id @default(cuid())
+  nome         String   @unique
+  titulo       String
+  corpo        String
+  url          String?
+  alvoPadrao   PushAlvo @default(TODOS)
+  filtroJson   Json?
+  usos         Int      @default(0)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  envios       PushNotification[]
+}
+
+model EmailEnvio {
+  id          String   @id @default(cuid())
+  para        String
+  assunto     String
+  template    String?
+  payloadJson Json?
+  status      String   @default("PENDENTE") // PENDENTE, ENVIADO, FALHA
+  erroMsg     String?
+  enviadoEm   DateTime?
+  resendId    String?
+  criadoEm    DateTime @default(now())
+
+  @@index([status])
+  @@index([para])
 }
 
 model PushSubscription {
@@ -673,10 +821,26 @@ model PedidoOracao {
   sentimento    Sentimento?  @relation(fields: [sentimentoId], references: [id])
   status        StatusOracao @default(ABERTO)
   intercessorId String?
+  publico       Boolean      @default(false)
+  anonimo       Boolean      @default(false)
+  prazoSla      DateTime?
   respostas     RespostaOracao[]
+  velas         OracaoVela[]
   criadoEm      DateTime     @default(now())
 
   @@index([status])
+  @@index([intercessorId])
+}
+
+model OracaoVela {
+  id        String       @id @default(cuid())
+  pedidoId  String
+  pedido    PedidoOracao @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  membroId  String?
+  nomeAvulso String?
+  criadoEm  DateTime     @default(now())
+
+  @@unique([pedidoId, membroId])
 }
 
 model RespostaOracao {
@@ -903,6 +1067,19 @@ model EtapaTrilha {
   descricao String?
   ordem     Int      @default(0)
   conteudoJson Json?
+  progressos EtapaProgresso[]
+}
+
+model EtapaProgresso {
+  id              String        @id @default(cuid())
+  pessoaJornadaId String
+  pessoaJornada   PessoaJornada @relation(fields: [pessoaJornadaId], references: [id], onDelete: Cascade)
+  etapaId         String
+  etapa           EtapaTrilha   @relation(fields: [etapaId], references: [id], onDelete: Cascade)
+  concluidaEm     DateTime      @default(now())
+  observacao      String?
+
+  @@unique([pessoaJornadaId, etapaId])
 }
 
 model PessoaJornada {
@@ -911,11 +1088,13 @@ model PessoaJornada {
   trilha          Trilha        @relation(fields: [trilhaId], references: [id])
   membroId        String
   membro          Membro        @relation(fields: [membroId], references: [id])
+  discipuladorId  String?
   status          StatusJornada @default(EM_ANDAMENTO)
   etapaAtualId    String?
   iniciadaEm      DateTime      @default(now())
   concluidaEm     DateTime?
   avaliacoes      AvaliacaoTrilha[]
+  progressos      EtapaProgresso[]
 
   @@unique([trilhaId, membroId])
 }
@@ -1148,4 +1327,272 @@ model InChurchSnapshot {
   capturadoEm DateTime @default(now())
 
   @@unique([tipo, chave])
+}
+
+// ============================================================================
+// F-P13 — ESCOLA BÍBLICA (EBD + IBM)
+// ============================================================================
+// EBD = Escola Bíblica Dominical (classes simultâneas no domingo, 1 aluno
+// participa de 1 classe por ciclo, sem notas formais)
+// IBM = Instituto Bíblico Maranata (seminário com grade curricular,
+// disciplinas, professores, presença, faltas, notas, boletim, certificado)
+
+enum FaixaEbd {
+  BERCARIO
+  CRIANCAS
+  PRE_ADOLESCENTES
+  ADOLESCENTES
+  JOVENS
+  ADULTOS
+  CASAIS
+  LIDERES
+  TERCEIRA_IDADE
+  GERAL
+}
+
+model EbdClasse {
+  id                 String         @id @default(cuid())
+  igrejaId           String
+  igreja             Igreja         @relation(fields: [igrejaId], references: [id])
+  nome               String
+  descricao          String?
+  faixa              FaixaEbd       @default(GERAL)
+  professorPrincipal String?
+  sala               String?
+  capacidade         Int?
+  diaSemana          Int            @default(0) // 0=domingo
+  horario            String         @default("09:00")
+  ciclo              String         // ex: "2026.T2"
+  capaUrl            String?
+  ativa              Boolean        @default(true)
+  inscricoes         EbdInscricao[]
+  aulas              EbdAula[]
+  criadoEm           DateTime       @default(now())
+
+  @@index([igrejaId, ciclo])
+  @@index([ativa])
+}
+
+model EbdInscricao {
+  id          String        @id @default(cuid())
+  classeId    String
+  classe      EbdClasse     @relation(fields: [classeId], references: [id], onDelete: Cascade)
+  membroId    String
+  membro      Membro        @relation(fields: [membroId], references: [id])
+  ciclo       String
+  status      String        @default("ATIVA") // ATIVA, TRANSFERIDA, SAIU, CONCLUIDA
+  observacoes String?
+  inscritoEm  DateTime      @default(now())
+  presencas   EbdPresenca[]
+
+  @@unique([classeId, membroId, ciclo])
+  @@index([membroId])
+}
+
+model EbdAula {
+  id            String        @id @default(cuid())
+  classeId      String
+  classe        EbdClasse     @relation(fields: [classeId], references: [id], onDelete: Cascade)
+  data          DateTime
+  titulo        String
+  resumo        String?
+  materialUrl   String?
+  totalPresentes Int          @default(0)
+  presencas     EbdPresenca[]
+  criadoEm      DateTime      @default(now())
+
+  @@index([classeId, data])
+}
+
+model EbdPresenca {
+  id           String       @id @default(cuid())
+  aulaId       String
+  aula         EbdAula      @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  inscricaoId  String
+  inscricao    EbdInscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  presente     Boolean
+  marcadoPorId String?
+  marcadoEm    DateTime     @default(now())
+  observacao   String?
+
+  @@unique([aulaId, inscricaoId])
+}
+
+// IBM ----------------------------------------------------------------------
+
+enum StatusMatricula {
+  MATRICULADO
+  TRANCADO
+  APROVADO
+  REPROVADO
+  TRANSFERIDO
+  ABANDONOU
+}
+
+enum TipoAvaliacao {
+  PROVA
+  TRABALHO
+  SEMINARIO
+  PROJETO
+  PARTICIPACAO
+  OUTRO
+}
+
+model IbmCurso {
+  id               String              @id @default(cuid())
+  nome             String              @unique // "Bacharel em Teologia"
+  descricao        String?
+  cargaHoraria     Int                 // total em horas
+  duracaoSemestres Int                 @default(8)
+  capaUrl          String?
+  ativo            Boolean             @default(true)
+  disciplinas      IbmDisciplina[]
+  matriculas       IbmMatriculaCurso[]
+  criadoEm         DateTime            @default(now())
+}
+
+model IbmDisciplina {
+  id            String              @id @default(cuid())
+  cursoId       String
+  curso         IbmCurso            @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  codigo        String              @unique // "TEO101"
+  nome          String              // "Introdução à Teologia"
+  ementa        String?
+  creditos      Int                 @default(2)
+  cargaHoraria  Int                 @default(40)
+  semestreSugerido Int              @default(1)
+  ativa         Boolean             @default(true)
+  turmas        IbmTurma[]
+  preReqsDessa  IbmPreRequisito[]   @relation("disciplinaQueExige")
+  preReqsDela   IbmPreRequisito[]   @relation("disciplinaExigida")
+
+  @@index([cursoId])
+}
+
+model IbmPreRequisito {
+  disciplinaId    String
+  disciplina      IbmDisciplina @relation("disciplinaQueExige", fields: [disciplinaId], references: [id], onDelete: Cascade)
+  preRequisitoId  String
+  preRequisito    IbmDisciplina @relation("disciplinaExigida", fields: [preRequisitoId], references: [id], onDelete: Cascade)
+
+  @@id([disciplinaId, preRequisitoId])
+}
+
+model IbmProfessor {
+  id          String     @id @default(cuid())
+  membroId    String?    @unique
+  membro      Membro?    @relation(fields: [membroId], references: [id])
+  nome        String
+  titulacao   String?    // "Mestre em Teologia, ESTBA"
+  bio         String?
+  fotoUrl     String?
+  ativo       Boolean    @default(true)
+  turmas      IbmTurma[]
+  criadoEm    DateTime   @default(now())
+}
+
+model IbmTurma {
+  id            String         @id @default(cuid())
+  disciplinaId  String
+  disciplina    IbmDisciplina  @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
+  professorId   String?
+  professor     IbmProfessor?  @relation(fields: [professorId], references: [id])
+  semestre      String         // "2026.1"
+  diaSemana     Int            // 0..6
+  horario       String         // "19:30"
+  sala          String?
+  vagas         Int            @default(40)
+  status        String         @default("ABERTA") // ABERTA, FECHADA, EM_ANDAMENTO, ENCERRADA
+  matriculas    IbmMatricula[]
+  aulas         IbmAula[]
+  avaliacoes    IbmAvaliacao[]
+  criadoEm      DateTime       @default(now())
+
+  @@index([disciplinaId, semestre])
+}
+
+model IbmMatriculaCurso {
+  id          String   @id @default(cuid())
+  alunoId     String
+  aluno       Membro   @relation("IbmCursoMatricula", fields: [alunoId], references: [id])
+  cursoId     String
+  curso       IbmCurso @relation(fields: [cursoId], references: [id])
+  matricula   String   @unique // "IBM2026001"
+  iniciadaEm  DateTime @default(now())
+  concluidaEm DateTime?
+  status      String   @default("ATIVO") // ATIVO, TRANCADO, FORMADO, JUBILADO
+
+  @@unique([alunoId, cursoId])
+}
+
+model IbmMatricula {
+  id          String          @id @default(cuid())
+  turmaId     String
+  turma       IbmTurma        @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  alunoId     String
+  aluno       Membro          @relation("IbmTurmaMatricula", fields: [alunoId], references: [id])
+  status      StatusMatricula @default(MATRICULADO)
+  mediaFinal  Decimal?        @db.Decimal(5, 2)
+  faltas      Int             @default(0)
+  notas       IbmNota[]
+  presencas   IbmPresenca[]
+  criadaEm    DateTime        @default(now())
+
+  @@unique([turmaId, alunoId])
+}
+
+model IbmAula {
+  id          String        @id @default(cuid())
+  turmaId     String
+  turma       IbmTurma      @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  data        DateTime
+  conteudo    String?
+  observacoes String?
+  presencas   IbmPresenca[]
+  criadoEm    DateTime      @default(now())
+
+  @@index([turmaId, data])
+}
+
+model IbmPresenca {
+  id          String       @id @default(cuid())
+  aulaId      String
+  aula        IbmAula      @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  matriculaId String
+  matricula   IbmMatricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+  presente    Boolean
+  justificada Boolean      @default(false)
+  observacao  String?
+
+  @@unique([aulaId, matriculaId])
+}
+
+model IbmAvaliacao {
+  id          String        @id @default(cuid())
+  turmaId     String
+  turma       IbmTurma      @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  tipo        TipoAvaliacao
+  titulo      String
+  descricao   String?
+  peso        Decimal       @db.Decimal(5, 2) @default(1.0)
+  dataEntrega DateTime?
+  notaMax     Decimal       @db.Decimal(5, 2) @default(10.0)
+  notas       IbmNota[]
+  criadaEm    DateTime      @default(now())
+
+  @@index([turmaId])
+}
+
+model IbmNota {
+  id            String       @id @default(cuid())
+  matriculaId   String
+  matricula     IbmMatricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+  avaliacaoId   String
+  avaliacao     IbmAvaliacao @relation(fields: [avaliacaoId], references: [id], onDelete: Cascade)
+  valor         Decimal      @db.Decimal(5, 2)
+  observacao    String?
+  lancadaEm     DateTime     @default(now())
+  lancadaPorId  String?
+
+  @@unique([matriculaId, avaliacaoId])
 }

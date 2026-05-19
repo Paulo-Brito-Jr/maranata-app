@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Heart, HandCoins, User } from "lucide-react";
+import { Home, Calendar, BookOpen, Mic, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITENS = [
   { href: "/membro", label: "Início", icon: Home, exact: true },
   { href: "/membro/eventos", label: "Eventos", icon: Calendar },
-  { href: "/membro/oracao", label: "Oração", icon: Heart },
-  { href: "/membro/doar", label: "Doar", icon: HandCoins },
-  { href: "/membro/perfil", label: "Perfil", icon: User },
+  { href: "/membro/biblia", label: "Bíblia", icon: BookOpen },
+  { href: "/membro/pregacoes", label: "Pregações", icon: Mic },
+  { href: "/membro/mais", label: "Mais", icon: MoreHorizontal },
 ];
 
 export function MembroBottomNav() {

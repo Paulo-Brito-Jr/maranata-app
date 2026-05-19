@@ -8,6 +8,7 @@ export function CriarPedidoForm() {
   const [aberto, setAberto] = useState(false);
   const [pedido, setPedido] = useState("");
   const [anonimo, setAnonimo] = useState(false);
+  const [publico, setPublico] = useState(false);
   const [busy, setBusy] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -24,7 +25,7 @@ export function CriarPedidoForm() {
       const resp = await fetch("/api/oracao/criar", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ pedido: pedido.trim(), anonimo }),
+        body: JSON.stringify({ pedido: pedido.trim(), anonimo, publico }),
       });
       if (!resp.ok) {
         const d = await resp.json().catch(() => ({}));
@@ -82,11 +83,20 @@ export function CriarPedidoForm() {
       <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <input
           type="checkbox"
+          checked={publico}
+          onChange={(e) => setPublico(e.target.checked)}
+          className="size-4 rounded border-input bg-background"
+        />
+        Publicar no mural pra que outros irmãos possam orar (vela acesa)
+      </label>
+      <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
           checked={anonimo}
           onChange={(e) => setAnonimo(e.target.checked)}
           className="size-4 rounded border-input bg-background"
         />
-        Manter anônimo (intercessores não veem seu nome)
+        Manter anônimo (ninguém vê meu nome)
       </label>
       {erro && <p className="mt-2 text-xs text-destructive">{erro}</p>}
       <div className="mt-3 flex gap-2">

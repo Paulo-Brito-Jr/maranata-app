@@ -17,6 +17,8 @@ import {
   ShoppingBag,
   Bell,
   Settings,
+  BookMarked,
+  GraduationCap,
 } from "lucide-react";
 
 const ITENS = [
@@ -25,6 +27,8 @@ const ITENS = [
   { href: "/admin/celulas", label: "Células", icon: Heart },
   { href: "/admin/eventos", label: "Eventos", icon: Calendar },
   { href: "/admin/pregacoes", label: "Pregações", icon: Mic },
+  { href: "/admin/devocional", label: "Devocional", icon: BookMarked },
+  { href: "/admin/escola", label: "Escola Bíblica", icon: GraduationCap },
   { href: "/admin/financeiro", label: "Financeiro", icon: HandCoins },
   { href: "/admin/intercessao", label: "Intercessão", icon: Sparkles },
   { href: "/admin/testemunhos", label: "Testemunhos", icon: MessageCircleHeart },

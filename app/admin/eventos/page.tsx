@@ -36,7 +36,10 @@ export default async function EventosPage() {
         { label: "Inscrições", valor: totalInscricoes },
         { label: "Realizados", valor: passados },
       ]}
-      acoes={[{ href: "/admin/eventos/novo", label: "Novo evento" }]}
+      acoes={[
+        { href: "/admin/eventos/novo", label: "Novo evento" },
+        { href: "/admin/eventos/calendario", label: "Calendário" },
+      ]}
     >
       {proximos.length === 0 ? (
         <EmptyState

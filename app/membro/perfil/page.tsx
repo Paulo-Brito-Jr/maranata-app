@@ -1,23 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { dataPtBR } from "@/lib/utils";
+import { RoleBadge } from "@/components/role-badge";
 import { SairButton } from "./sair-button";
 
 export const metadata = { title: "Perfil" };
 export const dynamic = "force-dynamic";
-
-const PAPEL_LABEL: Record<string, string> = {
-  SUPER_ADMIN: "Super admin",
-  PASTOR_DIRETORIA: "Pastor da diretoria",
-  ADMIN_IGREJA: "Admin da igreja",
-  LIDER_CELULA: "Líder de célula",
-  SECRETARIA: "Secretaria",
-  FINANCEIRO: "Financeiro",
-  KIDS_RESPONSAVEL: "Responsável Kids",
-  MEMBRO: "Membro",
-};
 
 function iniciais(nome: string): string {
   return nome
@@ -48,16 +39,30 @@ export default async function MembroPerfil() {
   return (
     <div className="space-y-5">
       <section className="flex flex-col items-center text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange to-brand-blue text-2xl font-bold text-white shadow-lg">
-          {iniciais(user.name)}
-        </div>
+        {membro?.fotoUrl ? (
+          <Image
+            src={membro.fotoUrl}
+            alt={user.name}
+            width={80}
+            height={80}
+            className="size-20 rounded-full object-cover shadow-lg"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange to-brand-blue text-2xl font-bold text-white shadow-lg">
+            {iniciais(user.name)}
+          </div>
+        )}
         <h1 className="mt-4 text-2xl font-bold">{user.name}</h1>
         <p className="text-sm text-muted-foreground">{user.email}</p>
-        {user.role && (
-          <span className="mt-2 rounded-full bg-primary/15 px-3 py-0.5 text-xs font-medium text-primary">
-            {PAPEL_LABEL[user.role] ?? user.role}
-          </span>
-        )}
+        <div className="mt-2">
+          <RoleBadge role={user.role} />
+        </div>
+        <Link
+          href="/membro/perfil/editar"
+          className="mt-4 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium hover:bg-secondary"
+        >
+          Editar perfil
+        </Link>
       </section>
 
       {membro && (
@@ -66,31 +71,20 @@ export default async function MembroPerfil() {
             Vínculo Maranata
           </h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <dt className="text-muted-foreground">Igreja</dt>
-              <dd className="font-medium">{membro.igreja.nome}</dd>
-            </div>
-            {membro.participacoes.length > 0 && (
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Célula</dt>
-                <dd className="font-medium">
-                  {membro.participacoes[0].celula.nome}
-                </dd>
-              </div>
+            <Linha rotulo="Igreja" valor={membro.igreja.nome} />
+            {membro.participacoes[0] && (
+              <Linha rotulo="Célula" valor={membro.participacoes[0].celula.nome} />
             )}
+            {membro.telefone && <Linha rotulo="Telefone" valor={membro.telefone} />}
+            {membro.profissao && <Linha rotulo="Profissão" valor={membro.profissao} />}
             {membro.dataBatismo && (
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Batismo</dt>
-                <dd className="font-medium">{dataPtBR(membro.dataBatismo)}</dd>
-              </div>
+              <Linha rotulo="Batismo" valor={dataPtBR(membro.dataBatismo)} />
+            )}
+            {membro.dataConversao && (
+              <Linha rotulo="Conversão" valor={dataPtBR(membro.dataConversao)} />
             )}
             {membro.dataNascimento && (
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Nascimento</dt>
-                <dd className="font-medium">
-                  {dataPtBR(membro.dataNascimento)}
-                </dd>
-              </div>
+              <Linha rotulo="Nascimento" valor={dataPtBR(membro.dataNascimento)} />
             )}
           </dl>
         </section>
@@ -101,43 +95,36 @@ export default async function MembroPerfil() {
           Atalhos
         </h2>
         <div className="mt-3 space-y-1">
-          <Link
-            href="/membro/oracao"
-            className="flex items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-secondary/50"
-          >
-            <span>Meus pedidos de oração</span>
-            <span className="text-muted-foreground">→</span>
-          </Link>
-          <Link
-            href="/membro/celula"
-            className="flex items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-secondary/50"
-          >
-            <span>Minha célula</span>
-            <span className="text-muted-foreground">→</span>
-          </Link>
-          <Link
-            href="/membro/testemunhos"
-            className="flex items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-secondary/50"
-          >
-            <span>Compartilhar testemunho</span>
-            <span className="text-muted-foreground">→</span>
-          </Link>
-          {user.role &&
-            ["SUPER_ADMIN", "PASTOR_DIRETORIA", "ADMIN_IGREJA"].includes(
-              user.role,
-            ) && (
-              <Link
-                href="/admin"
-                className="flex items-center justify-between rounded-xl bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
-              >
-                <span>🛠 Painel administrativo</span>
-                <span>→</span>
-              </Link>
-            )}
+          <Atalho href="/membro/carteirinha" label="Carteirinha digital" />
+          <Atalho href="/membro/historico" label="Meu histórico" />
+          <Atalho href="/membro/oracao" label="Meus pedidos de oração" />
+          <Atalho href="/membro/celula" label="Minha célula" />
+          <Atalho href="/membro/testemunhos" label="Compartilhar testemunho" />
         </div>
       </section>
 
       <SairButton />
     </div>
+  );
+}
+
+function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <dt className="text-muted-foreground">{rotulo}</dt>
+      <dd className="font-medium">{valor}</dd>
+    </div>
+  );
+}
+
+function Atalho({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-secondary/50"
+    >
+      <span>{label}</span>
+      <span className="text-muted-foreground">→</span>
+    </Link>
   );
 }

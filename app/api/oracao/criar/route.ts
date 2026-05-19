@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 const schema = z.object({
   pedido: z.string().min(5).max(1500),
   anonimo: z.boolean().optional(),
+  publico: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,12 +28,17 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
+  const prazoSla = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
   const pedido = await prisma.pedidoOracao.create({
     data: {
       pedido: parsed.data.pedido,
       status: "ABERTO",
       membroId: membro?.id ?? null,
       nomeAvulso: parsed.data.anonimo ? null : membro ? null : user.name,
+      publico: parsed.data.publico ?? false,
+      anonimo: parsed.data.anonimo ?? false,
+      prazoSla,
     },
     select: { id: true },
   });
