@@ -16,7 +16,9 @@
     "ios": {
       "bundleIdentifier": "org.maranata.app",
       "supportsTablet": true,
-      "associatedDomains": ["applinks:maranata.app"]
+      "associatedDomains": [
+        "applinks:maranata.app"
+      ]
     },
     "android": {
       "package": "org.maranata.app",
@@ -37,7 +39,11 @@
     "extra": {
       "router": {
         "origin": "https://maranata.app"
+      },
+      "eas": {
+        "projectId": "fa900200-0e11-4ce0-b414-47b196c7efd9"
       }
-    }
+    },
+    "owner": "producaomaranata"
   }
 }
