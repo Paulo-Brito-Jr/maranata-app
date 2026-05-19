@@ -19,8 +19,22 @@ export type MKUser = {
   igrejaId?: string;
 };
 
-export function maranataKeyStartUrl(returnUrl: string): string {
+export type MaranataKeyLoginMode = "mk" | "google" | "password" | "otp";
+
+export function maranataKeyStartUrl(
+  returnUrl: string,
+  options: { mode?: MaranataKeyLoginMode; force?: boolean } = {},
+): string {
   const u = new URL(`${MK}/api/sso/start`);
+  u.searchParams.set("app", APP_ID);
+  u.searchParams.set("return", returnUrl);
+  if (options.mode && options.mode !== "mk") u.searchParams.set("mode", options.mode);
+  if (options.force) u.searchParams.set("force", "1");
+  return u.toString();
+}
+
+export function maranataKeyLogoutUrl(returnUrl: string): string {
+  const u = new URL(`${MK}/api/sso/logout`);
   u.searchParams.set("app", APP_ID);
   u.searchParams.set("return", returnUrl);
   return u.toString();
