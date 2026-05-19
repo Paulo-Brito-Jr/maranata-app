@@ -44,9 +44,10 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-  let payload = { titulo: "Maranata App", corpo: event.data.text() };
+  const text = event.data.text();
+  let payload = { titulo: "Maranata App", corpo: text };
   try {
-    payload = JSON.parse(event.data.text());
+    payload = JSON.parse(text);
   } catch {
     /* texto puro */
   }

@@ -4,6 +4,7 @@ import {
   type CookieMethodsServer,
   type CookieOptions,
 } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -33,7 +34,6 @@ export async function supabaseServer() {
 }
 
 export function supabaseAdmin() {
-  const { createClient } = require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
   return createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });

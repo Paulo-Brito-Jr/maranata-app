@@ -7,7 +7,9 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    window.setTimeout(() => setMounted(true), 0);
+  }, []);
   if (!mounted) {
     return <span className="inline-block size-8 rounded-full bg-white/10" aria-hidden />;
   }

@@ -30,6 +30,7 @@ Fonte canônica do raio-X: `~/dev/Obsidian_Skynet/Setup/maranata-inchurch-raio-x
 - API routes em `app/api/<recurso>/route.ts` com `zod` na validação.
 - Mutations via Server Actions sempre que possível.
 - Todo `insert` crítico usa `.select().single()` pra capturar erro silencioso (memória `feedback_confirmar_insert_com_select`).
+- Web Push PWA usa `web-push`, tabela `PushSubscription`, componente `PushToggle` e envs Vercel já existentes: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
 
 ## Domínio
 

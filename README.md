@@ -8,18 +8,18 @@ Substitui o InChurch (`br.com.inchurch.missionariaevangmaranata`). Web + PWA + p
 
 | Fase | Módulo | Status |
 |---|---|---|
-| F0 | Scaffold + visual + Supabase + schema + SSO | em andamento |
-| F1 | Layouts (admin, membro, público) | pendente |
-| F2 | Financeiro + Doações Safe2Pay | pendente |
-| F3 | Eventos + Inscrições | pendente |
-| F4 | Membresia + Visitantes + Novos Convertidos | pendente |
-| F5 | Células + Redes | pendente |
-| F6 | Mídia + Pregações + Push + Banners | pendente |
-| F7 | Intercessão (pedidos + testemunhos + sentimentos) | pendente |
-| F8 | Kids (check-in + etiquetas) | pendente |
-| F9 | Jornadas + Trilhas | pendente |
-| F10 | Loja Maranata (white-label) | pendente |
-| F11 | Deploy `maranata.app` + Skynet | pendente |
+| F0 | Scaffold + visual + Supabase + schema + SSO | concluído |
+| F1 | Layouts (admin, membro, público) | concluído |
+| F2 | Financeiro + Doações Safe2Pay | stub testável |
+| F3 | Eventos + Inscrições | concluído |
+| F4 | Membresia + Visitantes + Novos Convertidos | concluído |
+| F5 | Células + Redes | concluído |
+| F6 | Mídia + Pregações + Push + Banners | push web em implementação |
+| F7 | Intercessão (pedidos + testemunhos + sentimentos) | concluído |
+| F8 | Kids (check-in + etiquetas) | concluído |
+| F9 | Jornadas + Trilhas | concluído |
+| F10 | Loja Maranata (white-label) | concluído |
+| F11 | Deploy `maranata.app` + Skynet | concluído |
 | F12 | App nativo Expo | pendente |
 
 ## Setup

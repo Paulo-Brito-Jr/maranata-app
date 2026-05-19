@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { enviarPush } from "@/lib/push";
 
 export async function criarPregacao(formData: FormData) {
   const titulo = String(formData.get("titulo") || "").trim();
@@ -14,7 +15,7 @@ export async function criarPregacao(formData: FormData) {
 
   if (!titulo) return;
 
-  const p = await prisma.pregacao.create({
+  await prisma.pregacao.create({
     data: {
       titulo,
       pregador,
@@ -38,12 +39,17 @@ export async function criarPush(formData: FormData) {
 
   if (!titulo || !corpo) return;
 
-  await prisma.pushNotification.create({
+  const push = await prisma.pushNotification.create({
     data: {
       titulo,
       corpo,
       alvo,
     },
+  });
+  const resultado = await enviarPush({ tipo: "TODOS" }, { titulo, corpo, url: "/membro" });
+  await prisma.pushNotification.update({
+    where: { id: push.id },
+    data: { enviadoEm: new Date(), totalEnviado: resultado.enviados },
   });
   revalidatePath("/admin/push");
 }
