@@ -41,7 +41,7 @@ Fonte canônica do raio-X: `~/dev/Obsidian_Skynet/Setup/maranata-inchurch-raio-x
 
 - **Supabase novo**, projeto `maranata-app-prod` (criado na F0.2 via Management API).
 - Credenciais no vault sob prefixo `MARANATA_APP_V2_*`.
-- Não confundir com o Supabase legado `yszpvlfffkiguorwbyaw` (esse continua sendo a auditoria InChurch em `~/dev/maranata-app-dashboard`).
+- Não confundir com o Supabase legado `yszpvlfffkiguorwbyaw` (esse continua sendo a auditoria InChurch em `~/dev/inchurch-dashboard`).
 
 ## Como rodar local
 
