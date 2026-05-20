@@ -9,6 +9,22 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
+  async redirects() {
+    return [
+      // igrejamaranata.app + www → maranata.app (301, preservando path + query)
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "(?:www\\.)?igrejamaranata\\.app",
+          },
+        ],
+        destination: "https://maranata.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
