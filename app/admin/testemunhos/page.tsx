@@ -9,6 +9,7 @@ import {
   excluirTestemunhoAction,
 } from "./actions";
 import { LoteToolbar } from "./lote-toolbar";
+import { BulkPublishToolbar } from "./bulk-publish-toolbar";
 
 export const metadata = { title: "Moderar testemunhos" };
 export const dynamic = "force-dynamic";
@@ -122,6 +123,12 @@ export default async function AdminTestemunhos({
           ),
         )}
       </div>
+
+      <BulkPublishToolbar
+        pendentes={pendentesReais}
+        destaques={destaques}
+        publicados={publicados}
+      />
 
       {aba === "legado" && (
         <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">

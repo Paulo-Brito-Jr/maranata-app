@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getCurrentUser, getDefaultRedirectForUser, rolesPodemAdministrar } from "@/lib/auth";
+import {
+  getCurrentUser,
+  getDefaultRedirectForUser,
+  rolesPodemAdministrar,
+} from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { BannerCarousel } from "./_components/banner-carousel";
+
+export const dynamic = "force-dynamic";
 
 const UNIDADES = [
   "Sede Tijuca",
@@ -29,20 +37,51 @@ export default async function HomePage() {
     : "Entrar";
   const greeting = user ? `Entrou como ${user.name.split(" ")[0]}.` : null;
 
+  const agora = new Date();
+  const [banners, atalhos] = await Promise.all([
+    prisma.banner.findMany({
+      where: {
+        ativo: true,
+        AND: [
+          { OR: [{ inicio: null }, { inicio: { lte: agora } }] },
+          { OR: [{ fim: null }, { fim: { gte: agora } }] },
+        ],
+      },
+      orderBy: [{ ordem: "asc" }, { criadoEm: "desc" }],
+      take: 5,
+    }),
+    prisma.atalho.findMany({
+      where: { ativo: true },
+      orderBy: [{ ordem: "asc" }, { titulo: "asc" }],
+      take: 80,
+    }),
+  ]);
+
   return (
     <main className="min-h-screen">
       <header className="faixa-brand text-brand-blue-foreground">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-white/20 backdrop-blur" aria-hidden />
+            <div
+              className="size-10 rounded-full bg-white/20 backdrop-blur"
+              aria-hidden
+            />
             <div>
-              <div className="text-sm uppercase tracking-widest opacity-80">IME</div>
+              <div className="text-sm uppercase tracking-widest opacity-80">
+                IME
+              </div>
               <div className="text-lg font-semibold">Maranata App</div>
             </div>
           </div>
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/eventos" className="hover:underline">
               Eventos
+            </Link>
+            <Link href="/downloads" className="hover:underline">
+              Downloads
+            </Link>
+            <Link href="/loja" className="hover:underline">
+              Loja
             </Link>
             <Link href="/doar" className="hover:underline">
               Doar
@@ -68,11 +107,14 @@ export default async function HomePage() {
               Tudo da sua igreja num só lugar.
             </h1>
             <p className="mt-5 text-lg text-muted-foreground">
-              15 unidades · 2.731 membros · 6.662 usuários no app. Eventos, células,
-              pregações, intercessão e contribuição — feitos por nós, pra nós.
+              15 unidades · 2.731 membros · 6.662 usuários no app. Eventos,
+              células, pregações, intercessão e contribuição — feitos por nós,
+              pra nós.
             </p>
             {greeting ? (
-              <p className="mt-3 text-sm font-medium text-brand-blue">{greeting}</p>
+              <p className="mt-3 text-sm font-medium text-brand-blue">
+                {greeting}
+              </p>
             ) : null}
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -94,7 +136,10 @@ export default async function HomePage() {
             <h2 className="text-lg font-semibold">Nossas unidades</h2>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               {UNIDADES.map((u) => (
-                <li key={u} className="flex items-center gap-2 text-muted-foreground">
+                <li
+                  key={u}
+                  className="flex items-center gap-2 text-muted-foreground"
+                >
                   <span className="size-1.5 rounded-full bg-brand-orange" />
                   {u}
                 </li>
@@ -107,12 +152,62 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {banners.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-12">
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-muted-foreground">
+            Em destaque
+          </h2>
+          <BannerCarousel
+            banners={banners.map((b) => ({
+              id: b.id,
+              titulo: b.titulo,
+              subtitulo: b.subtitulo,
+              imagemUrl: b.imagemUrl,
+              linkUrl: b.linkUrl,
+            }))}
+          />
+        </section>
+      )}
+
+      {atalhos.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-16">
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-muted-foreground">
+            Atalhos rápidos
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {atalhos.map((a) => (
+              <li key={a.id}>
+                <a
+                  href={a.linkUrl}
+                  target={a.linkUrl.startsWith("http") ? "_blank" : undefined}
+                  rel={
+                    a.linkUrl.startsWith("http") ? "noreferrer" : undefined
+                  }
+                  className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-center text-sm transition hover:border-primary/40 hover:bg-secondary/30"
+                >
+                  {a.icone && (
+                    <span className="text-2xl" aria-hidden>
+                      {a.icone}
+                    </span>
+                  )}
+                  <span className="line-clamp-2 text-xs font-medium">
+                    {a.titulo}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
         <p>
-          © {new Date().getFullYear()} Igreja Missionária Evangélica Maranata · CNPJ
-          42.117.804/0001-15
+          © {new Date().getFullYear()} Igreja Missionária Evangélica Maranata ·
+          CNPJ 42.117.804/0001-15
         </p>
-        <p className="mt-1 text-xs opacity-70">v0.1 · plataforma própria em construção</p>
+        <p className="mt-1 text-xs opacity-70">
+          v0.1 · plataforma própria em construção
+        </p>
       </footer>
     </main>
   );

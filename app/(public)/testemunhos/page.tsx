@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
 
 export const metadata = { title: "Testemunhos" };
 export const dynamic = "force-dynamic";
+
+async function flagAtiva(chave: string): Promise<boolean> {
+  const f = await prisma.featureFlag.findUnique({ where: { chave } });
+  return Boolean(f?.habilitada);
+}
 
 function iniciais(nome: string): string {
   return nome
@@ -22,6 +28,7 @@ function dataCurta(d: Date): string {
 }
 
 export default async function TestemunhosPublicosPage() {
+  if (!(await flagAtiva("public_testimony"))) notFound();
   const [destaques, recentes, total] = await Promise.all([
     prisma.testemunho.findMany({
       where: { publicado: true, destaque: true },

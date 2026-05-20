@@ -76,18 +76,21 @@ Espelho atualizado em 2026-05-19. Marcado como concluído por estar fresco. Cria
 **Resolução para os 798 participantes/visitantes:** rodar Fase 1 (re-sync fornecedor) com fetcher novo que preserva `celula_id` original do InChurch API. Endpoint: `/api/v1/small_group/` ou parse de `/api/v1/cell/?...=members`.
 
 ### 🟡 Fase 3 — Features faltantes (paridade funcional)
-Cada item: branch dedicada, PR, preview Vercel, merge main.
 
-3a. Push notifications real (M2)
-3b. Public testimony + Prayer Clock (M1)
-3c. Safe2Pay recurrence + divulgação (M2)
-3d. Financeiro avançado: multi-conta + DRE + OFX + saídas (M3)
-3e. Eventos recorrentes expandidos (M2)
-3f. Buscador público de células (M1)
-3g. Métricas células (9 tipos) (M3)
-3h. Schemas novos: AtendimentoPastoral, CampoCustomizado, Subnomenclatura, MensagemSistema, PaginaMultiuso, HistoricoMembro (M3)
-3i. Catálogo Feature Flags (21) (M1)
-3j. Mídia completa: banners+atalhos+downloads completos + YouTube/SoundCloud integration (M2)
+**Progresso 2026-05-20 (sessão Opus 4.7):**
+
+| # | Item | Status | Entregas |
+|---|---|---|---|
+| 3a | Push notifications real | ✅ | lib/push.ts + 5 crons + 8 templates default (`Bom dia Domingo`, `Quinta Viva`, `Sexta Célula`, `Dia de Dízimo`, `Aniversariantes`, `Pedido Respondido`, `Testemunho Publicado`, `Resumo Mensal`). Adoção (subscriptions=0) é operacional, infra pronta. Seed: `pnpm tsx --env-file=.env.local scripts/seed-push-templates.ts` |
+| 3b | Public testimony + Prayer Clock | 🟡 agente | Public testimony respeita flag `public_testimony` (ON). Prayer Clock (escala SLA 48h + bulk publish) entregue por agente em paralelo |
+| 3c | Safe2Pay recorrência + divulgação | ✅ | Toggle ANUAL adicionado em /doar. 2 banners permanentes seedados ("Seja parceiro Maranata" + "Maranata 2026"). Flag `safe2pay_recurrence` ON. Backend lib/safe2pay já completo (subscription + checkout + hmac + webhook) |
+| 3d | Financeiro avançado | 🟡 agente | Multi-conta (15 contas, 1 por igreja), DRE 12m, fluxo caixa, importar OFX. Entregue por agente em paralelo |
+| 3e | Eventos recorrentes expandidos | ✅ | Não precisou trabalho — captura InChurch já expandiu 315 → 2731 ocorrências (1859 marcados `recorrente=t`, range 2022-2028) |
+| 3f | Buscador público de células | ✅ | /(public)/celulas — server component force-dynamic + querystring filters (igreja/dia/rede/q), respeita flag `cell_finder`. Links em /(public)/eventos e /(public)/layout |
+| 3g | Métricas células (9 tipos) | ✅ | /admin/celulas/metricas — total/ativas/inativas, comparecimento 30d (presentes/visitantes/conversões), top 10 maiores, distribuição rede/igreja/dia |
+| 3h | Schemas novos | 🟡 agente | AtendimentoPastoral, CampoCustomizado, RespostaCampo, Subnomenclatura, MensagemSistema, PaginaMultiuso, HistoricoMembro + 6 admin UIs + sidebar. Entregue por agente |
+| 3i | Catálogo Feature Flags | ✅ | 21 flags InChurch importadas via ETL com descrições curativas. FLAGS_SUGERIDAS em /admin/config expandido pra 26 (5 locais + 21 InChurch). Flags ON: cell_finder, journey, public_testimony, safe2pay_recurrence |
+| 3j | Mídia completa (banners/atalhos/downloads/loja) | 🟡 agente | YouTube embed em pregações, página downloads pública, loja básica com carrinho + checkout Safe2Pay. Entregue por agente |
 
 ### 🟡 Fase 4 — Validação + cutover
 - Smoke tests por módulo

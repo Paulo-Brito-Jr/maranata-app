@@ -23,6 +23,9 @@ export default async function PublicLayout({ children }: { children: React.React
             <Link href="/eventos" className="hover:text-primary">
               Eventos
             </Link>
+            <Link href="/celulas" className="hover:text-primary">
+              Células
+            </Link>
             <Link href="/testemunhos" className="hover:text-primary">
               Testemunhos
             </Link>

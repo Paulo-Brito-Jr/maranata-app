@@ -125,6 +125,25 @@ export default async function EventosPublicosPage() {
           </div>
         </section>
       )}
+
+      <section className="rounded-3xl border border-brand-orange/30 bg-gradient-to-br from-brand-orange/10 to-brand-blue/10 p-6 md:p-8">
+        <p className="text-xs font-medium uppercase tracking-widest text-brand-orange">
+          Faça parte
+        </p>
+        <h2 className="mt-1 text-xl font-semibold">
+          Encontre uma célula perto de você
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Pequenos grupos que se reúnem nas casas durante a semana para oração,
+          comunhão e estudo da Palavra.
+        </p>
+        <Link
+          href="/celulas"
+          className="mt-4 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/30 transition hover:opacity-90"
+        >
+          Buscar célula
+        </Link>
+      </section>
     </div>
   );
 }

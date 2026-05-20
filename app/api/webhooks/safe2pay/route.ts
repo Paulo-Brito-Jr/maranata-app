@@ -59,47 +59,74 @@ export async function POST(req: Request) {
   }
 
   const doacao = await prisma.doacao.findFirst({ where: { safe2payId: txId } });
-  if (!doacao) {
-    return NextResponse.json({ ok: true, msg: "Doação não encontrada" });
-  }
+  if (doacao) {
+    if (!dbStatus) {
+      return NextResponse.json({ ok: true, ignored: safeStatus });
+    }
 
-  if (!dbStatus) {
-    return NextResponse.json({ ok: true, ignored: safeStatus });
-  }
-
-  const wasPaid = doacao.status === "PAGA";
-  await prisma.doacao.update({
-    where: { id: doacao.id },
-    data: {
-      status: dbStatus,
-      pagaEm: dbStatus === "PAGA" && !doacao.pagaEm ? new Date() : doacao.pagaEm,
-      safe2payJson: body as Prisma.InputJsonValue,
-    },
-  });
-
-  if (dbStatus === "PAGA" && !wasPaid) {
-    await prisma.lancamentoFinanceiro.create({
+    const wasPaid = doacao.status === "PAGA";
+    await prisma.doacao.update({
+      where: { id: doacao.id },
       data: {
-        igrejaId: doacao.igrejaId,
-        tipo: "ENTRADA",
-        status: "CONCILIADO",
-        formaPagamento: doacao.formaPagamento,
-        valor: doacao.valor,
-        data: new Date(),
-        descricao: `Doação ${doacao.nomeDoador}`,
-        doacaoId: doacao.id,
+        status: dbStatus,
+        pagaEm: dbStatus === "PAGA" && !doacao.pagaEm ? new Date() : doacao.pagaEm,
+        safe2payJson: body as Prisma.InputJsonValue,
       },
     });
 
-    if (doacao.campanhaId) {
-      await prisma.campanha.update({
-        where: { id: doacao.campanhaId },
-        data: { arrecadado: { increment: doacao.valor } },
+    if (dbStatus === "PAGA" && !wasPaid) {
+      await prisma.lancamentoFinanceiro.create({
+        data: {
+          igrejaId: doacao.igrejaId,
+          tipo: "ENTRADA",
+          status: "CONCILIADO",
+          formaPagamento: doacao.formaPagamento,
+          valor: doacao.valor,
+          data: new Date(),
+          descricao: `Doação ${doacao.nomeDoador}`,
+          doacaoId: doacao.id,
+        },
       });
+
+      if (doacao.campanhaId) {
+        await prisma.campanha.update({
+          where: { id: doacao.campanhaId },
+          data: { arrecadado: { increment: doacao.valor } },
+        });
+      }
     }
+
+    return NextResponse.json({ ok: true, status: dbStatus, scope: "doacao" });
   }
 
-  return NextResponse.json({ ok: true, status: dbStatus });
+  // fallback: pedido da loja
+  const pedido = await prisma.lojaPedido.findFirst({ where: { safe2payId: txId } });
+  if (pedido) {
+    if (!dbStatus) {
+      return NextResponse.json({ ok: true, ignored: safeStatus });
+    }
+    const novoStatus =
+      dbStatus === "PAGA"
+        ? "PAGO"
+        : dbStatus === "CANCELADA"
+          ? "CANCELADO"
+          : dbStatus === "REEMBOLSADA"
+            ? "REEMBOLSADO"
+            : pedido.status;
+
+    await prisma.lojaPedido.update({
+      where: { id: pedido.id },
+      data: {
+        status: novoStatus,
+        pagoEm:
+          novoStatus === "PAGO" && !pedido.pagoEm ? new Date() : pedido.pagoEm,
+      },
+    });
+
+    return NextResponse.json({ ok: true, status: novoStatus, scope: "loja" });
+  }
+
+  return NextResponse.json({ ok: true, msg: "Recurso não encontrado" });
 }
 
 export async function GET() {

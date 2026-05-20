@@ -1308,6 +1308,59 @@ async function etlNovoConvertido() {
   }
 }
 
+// Catálogo InChurch — descrições curativas por chave (fonte: raio-x Obsidian)
+const FLAG_DESC: Record<string, string> = {
+  business_unit: "Unidades de negócio (separação P&L)",
+  cell_finder: "Buscador público de células (índice)",
+  cells_network_preferences: "Preferências por rede de células",
+  event_denomination_account: "Contas por evento/denominação",
+  event_subscription_without_login: "Inscrição em evento sem login",
+  external_subscription: "Inscrições externas via URL",
+  fee_transfer: "Transferência de taxas entre contas",
+  feelings_settings: "Configurações avançadas de sentimentos",
+  financial_account_decentralization: "Descentralização financeira por igreja",
+  iugu_integration: "Gateway de pagamento Iugu (alt. Safe2Pay)",
+  journey: "Jornadas/Trilhas de discipulado",
+  kids: "Ministério infantil (check-in digital + etiquetas)",
+  member_custom_fields: "Campos customizáveis em membros",
+  multiple_financial_account: "Múltiplas contas bancárias (1 por igreja)",
+  prayer_clock: "Escala de intercessão com SLA",
+  public_api: "API pública para integrações terceiras",
+  public_testimony: "Testemunhos visíveis no site público",
+  safe2pay_recurrence: "Dízimo recorrente via Safe2Pay",
+  smart_store: "Loja inteligente (white-label dropshipping)",
+  subgroup_preferences: "Preferências da denominação",
+  ticket_type_questions: "Perguntas por tipo de ingresso",
+};
+
+async function etlFeatureFlag() {
+  const t = tally("FeatureFlag");
+  type R = { chave: string; has_access: boolean; status: string };
+  const rows = await readLegacy<R>("feature_flags_inchurch", "chave, has_access, status", "chave");
+  t.lidos = rows.length;
+  if (DRY) {
+    console.log(`[DRY] FeatureFlag: ${rows.length} rows; sample=${JSON.stringify(rows[0])}`);
+    return;
+  }
+  for (const r of rows) {
+    try {
+      const id = cuid();
+      const descricao = FLAG_DESC[r.chave] ?? `Feature flag InChurch (${r.status})`;
+      await run(
+        `INSERT INTO "FeatureFlag" (id, chave, habilitada, descricao, "criadaEm", "atualizadaEm")
+         VALUES ($1, $2, $3, $4, NOW(), NOW())
+         ON CONFLICT (chave) DO UPDATE SET
+            descricao = COALESCE("FeatureFlag".descricao, EXCLUDED.descricao)`,
+        [id, r.chave, r.has_access === true, descricao],
+      );
+      t.inseridos++;
+    } catch (e) {
+      t.erros++;
+      if (VERBOSE) console.error("FeatureFlag err:", (e as Error).message, r.chave);
+    }
+  }
+}
+
 async function etlImportacaoLog() {
   const t = tally("ImportacaoLog");
   type R = { id: number; tabela: string; registros: number; erros: number; iniciado_em: string; concluido_em: string | null; status: string; detalhes: any };
@@ -1369,6 +1422,7 @@ const PHASES: Record<string, () => Promise<void>> = {
   LancamentoFinanceiro: etlLancamento,
   Trilha: etlTrilha,
   NovoConvertido: etlNovoConvertido,
+  FeatureFlag: etlFeatureFlag,
   ImportacaoLog: etlImportacaoLog,
 };
 

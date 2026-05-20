@@ -11,11 +11,34 @@ export const metadata = { title: "Configurações" };
 export const dynamic = "force-dynamic";
 
 const FLAGS_SUGERIDAS = [
+  // Flags do Maranata App (locais)
   { chave: "DOACAO_AVULSA_LIVRE", desc: "Permite doação sem login" },
   { chave: "EVENTOS_INSCRICAO_PUBLICA", desc: "Permite inscrição em evento sem login" },
   { chave: "TESTEMUNHOS_REVISAO_AUTOMATICA", desc: "Auto-publicar testemunhos sem moderação" },
   { chave: "KIDS_CHECKIN_QR", desc: "Habilita checkin Kids via QR code" },
   { chave: "PUSH_AUTO_DOMINGO", desc: "Cron de push do domingo manhã ativo" },
+  // 21 flags InChurch (catálogo migrado em 2026-05-20)
+  { chave: "cell_finder", desc: "Buscador público de células" },
+  { chave: "journey", desc: "Jornadas/Trilhas de discipulado" },
+  { chave: "kids", desc: "Ministério infantil (check-in + etiquetas)" },
+  { chave: "smart_store", desc: "Loja inteligente (white-label)" },
+  { chave: "public_testimony", desc: "Testemunhos visíveis no site público" },
+  { chave: "prayer_clock", desc: "Escala de intercessão com SLA 48h" },
+  { chave: "safe2pay_recurrence", desc: "Dízimo recorrente via Safe2Pay" },
+  { chave: "multiple_financial_account", desc: "Múltiplas contas bancárias (1 por igreja)" },
+  { chave: "event_subscription_without_login", desc: "Inscrição em evento sem login" },
+  { chave: "event_denomination_account", desc: "Contas por evento/denominação" },
+  { chave: "external_subscription", desc: "Inscrições externas via URL" },
+  { chave: "fee_transfer", desc: "Transferência de taxas entre contas" },
+  { chave: "feelings_settings", desc: "Configurações avançadas de sentimentos" },
+  { chave: "financial_account_decentralization", desc: "Descentralização financeira por igreja" },
+  { chave: "iugu_integration", desc: "Gateway Iugu (alt. Safe2Pay)" },
+  { chave: "business_unit", desc: "Unidades de negócio (separação P&L)" },
+  { chave: "cells_network_preferences", desc: "Preferências por rede de células" },
+  { chave: "member_custom_fields", desc: "Campos customizáveis em membros" },
+  { chave: "public_api", desc: "API pública para integrações terceiras" },
+  { chave: "subgroup_preferences", desc: "Preferências da denominação" },
+  { chave: "ticket_type_questions", desc: "Perguntas por tipo de ingresso" },
 ];
 
 export default async function ConfigPage() {

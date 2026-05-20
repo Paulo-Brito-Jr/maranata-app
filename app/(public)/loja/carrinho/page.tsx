@@ -8,6 +8,8 @@ import { removerDoCarrinho, finalizarPedido } from "./actions";
 export const metadata = { title: "Carrinho" };
 export const dynamic = "force-dynamic";
 
+const FRETE_FIXO = 15;
+
 export default async function CarrinhoPage() {
   const itens = await lerCarrinho();
   if (itens.length === 0) {
@@ -47,6 +49,7 @@ export default async function CarrinhoPage() {
     return { i, p, preco, total };
   });
   const subtotal = linhas.reduce((a, l) => a + l.total, 0);
+  const total = subtotal + FRETE_FIXO;
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-6 py-10">
@@ -84,9 +87,19 @@ export default async function CarrinhoPage() {
         ))}
       </ul>
 
-      <div className="flex items-center justify-between border-t border-border pt-4">
-        <span className="text-sm">Subtotal</span>
-        <span className="text-2xl font-bold">{brl(subtotal)}</span>
+      <div className="space-y-1 border-t border-border pt-4 text-sm">
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Subtotal</span>
+          <span className="font-mono">{brl(subtotal)}</span>
+        </div>
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Frete (fixo)</span>
+          <span className="font-mono">{brl(FRETE_FIXO)}</span>
+        </div>
+        <div className="flex items-center justify-between pt-1 text-lg font-bold">
+          <span>Total</span>
+          <span>{brl(total)}</span>
+        </div>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5">
@@ -105,15 +118,27 @@ export default async function CarrinhoPage() {
             <Field label="Documento (CPF)">
               <Input name="documento" />
             </Field>
+            <Field label="CEP" required>
+              <Input
+                name="cep"
+                required
+                inputMode="numeric"
+                pattern="\d{5}-?\d{3}"
+                placeholder="00000-000"
+              />
+            </Field>
+            <Field label="Cidade / UF">
+              <Input name="cidadeUf" placeholder="Rio de Janeiro / RJ" />
+            </Field>
           </div>
-          <Field label="Endereço de entrega (opcional)" hint="Deixe em branco se vai retirar.">
-            <Textarea name="endereco" rows={2} />
+          <Field label="Endereço completo" required hint="Rua, número, complemento, bairro.">
+            <Textarea name="endereco" rows={2} required />
           </Field>
           <Button type="submit">
-            Finalizar e pagar via PIX ({brl(subtotal)})
+            Finalizar e pagar via PIX ({brl(total)})
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            Você receberá link de pagamento Safe2Pay e atualização por e-mail.
+            Você receberá link de pagamento Safe2Pay (PIX/cartão) e atualização por e-mail.
           </p>
         </form>
       </section>
