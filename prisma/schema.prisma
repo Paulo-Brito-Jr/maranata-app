@@ -280,9 +280,12 @@ enum StatusCelula {
 
 model Rede {
   id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
   nome        String   @unique
   cor         String?
   supervisor  String?
+  igrejaId    String?
+  totalCelulas Int     @default(0)
   celulas     Celula[]
   criadaEm    DateTime @default(now())
 }

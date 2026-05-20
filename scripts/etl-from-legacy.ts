@@ -64,6 +64,7 @@ const idMap: Record<string, Map<number | string, string>> = {
   UsuarioApp: new Map(),
   Visitante: new Map(),
   Celula: new Map(),
+  Rede: new Map(),
   CategoriaEvento: new Map(),
   CategoriaPregacao: new Map(),
   CategoriaFinanceira: new Map(),
@@ -83,6 +84,13 @@ const idMap: Record<string, Map<number | string, string>> = {
   Testemunho: new Map(),
   PedidoOracao: new Map(),
 };
+
+// parseInt seguro: vazio/inválido vira null
+function intOrNull(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : parseInt(String(v), 10);
+  return Number.isFinite(n) ? n : null;
+}
 
 function dateOrNull(v: string | null | undefined): Date | null {
   if (!v) return null;
@@ -551,6 +559,55 @@ async function etlEquipe() {
   });
 }
 
+async function etlRede() {
+  const t = tally("Rede");
+  type R = { id: number; nome: string; supervisor: string | null; total_celulas: number | null; igreja_id: number | null };
+  const rows = await readLegacy<R>("redes_celulas");
+  t.lidos = rows.length;
+  if (DRY) {
+    console.log(`[DRY] Rede: ${rows.length} rows; sample=${JSON.stringify(rows[0])}`);
+    return;
+  }
+  for (const r of rows) {
+    try {
+      const igrejaId = r.igreja_id != null ? idMap.Igreja.get(r.igreja_id) ?? null : null;
+      // Upsert por inchurchId; nome conflita com seeds locais ("Rede Tijuca" vs "EBD REDE TIJUCA") raramente
+      const id = cuid();
+      const res = await run<{ id: string }>(
+        `INSERT INTO "Rede" (id, "inchurchId", nome, supervisor, "totalCelulas", "igrejaId", "criadaEm")
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         ON CONFLICT ("inchurchId") DO UPDATE SET
+            nome = EXCLUDED.nome,
+            supervisor = EXCLUDED.supervisor,
+            "totalCelulas" = EXCLUDED."totalCelulas",
+            "igrejaId" = COALESCE(EXCLUDED."igrejaId", "Rede"."igrejaId")
+         RETURNING id`,
+        [id, r.id, r.nome, r.supervisor, r.total_celulas ?? 0, igrejaId],
+      );
+      if (res.length) {
+        idMap.Rede.set(r.id, res[0].id);
+        idMap.Rede.set(`name:${r.nome.toLowerCase()}`, res[0].id);
+        t.inseridos++;
+      } else {
+        t.pulados++;
+      }
+    } catch (e) {
+      t.erros++;
+      if (VERBOSE) console.error("Rede err:", (e as Error).message, r.nome);
+    }
+  }
+}
+
+async function loadRedesNew() {
+  const r = await novo.query<{ id: string; inchurchId: number | null; nome: string }>(
+    `SELECT id, "inchurchId", nome FROM "Rede"`,
+  );
+  for (const row of r.rows) {
+    if (row.inchurchId != null) idMap.Rede.set(row.inchurchId, row.id);
+    idMap.Rede.set(`name:${row.nome.toLowerCase()}`, row.id);
+  }
+}
+
 async function etlCelula() {
   const t = tally("Celula");
   type R = {
@@ -562,7 +619,7 @@ async function etlCelula() {
     igreja_id: number | null;
     ativa: boolean;
     endereco: string | null;
-    dia_semana: number | null;
+    dia_semana: string | number | null;
     horario: string | null;
     criado_em: string;
   };
@@ -576,13 +633,21 @@ async function etlCelula() {
     try {
       const igrejaId = resolveIgreja(r.igreja_id);
       const status = r.ativa ? "ATIVA" : "INATIVA";
+      const diaSemana = intOrNull(r.dia_semana);
+      const redeId = r.rede_id != null ? idMap.Rede.get(r.rede_id) ?? null : null;
       const id = cuid();
       const res = await run<{ id: string }>(
-        `INSERT INTO "Celula" (id, "inchurchId", "igrejaId", nome, descricao, endereco, "diaSemana", horario, status, "criadaEm")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::"StatusCelula", $10)
-         ON CONFLICT ("inchurchId") DO NOTHING
+        `INSERT INTO "Celula" (id, "inchurchId", "igrejaId", "redeId", nome, descricao, endereco, "diaSemana", horario, status, "criadaEm")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::"StatusCelula", $11)
+         ON CONFLICT ("inchurchId") DO UPDATE SET
+            "redeId"   = COALESCE(EXCLUDED."redeId", "Celula"."redeId"),
+            "diaSemana" = COALESCE(EXCLUDED."diaSemana", "Celula"."diaSemana"),
+            horario    = COALESCE(EXCLUDED.horario, "Celula".horario),
+            endereco   = COALESCE(EXCLUDED.endereco, "Celula".endereco),
+            descricao  = COALESCE(EXCLUDED.descricao, "Celula".descricao),
+            status     = EXCLUDED.status
          RETURNING id`,
-        [id, r.id, igrejaId, r.nome, r.tipo, r.endereco, r.dia_semana, r.horario, status, dateOrNull(r.criado_em) ?? new Date()],
+        [id, r.id, igrejaId, redeId, r.nome, r.tipo, r.endereco, diaSemana, r.horario, status, dateOrNull(r.criado_em) ?? new Date()],
       );
       if (res.length) {
         idMap.Celula.set(r.id, res[0].id);
@@ -597,7 +662,18 @@ async function etlCelula() {
   }
 }
 
+async function loadCelulasNew() {
+  const r = await novo.query<{ id: string; inchurchId: number | null }>(
+    `SELECT id, "inchurchId" FROM "Celula" WHERE "inchurchId" IS NOT NULL`,
+  );
+  for (const row of r.rows) {
+    if (row.inchurchId != null) idMap.Celula.set(row.inchurchId, row.id);
+  }
+}
+
 async function etlVisitanteCelula() {
+  // Garante que idMap.Celula está populado mesmo rodando essa fase isolada
+  if (idMap.Celula.size === 0) await loadCelulasNew();
   // participantes_celulas no legado é só name+phone (sem membroId real)
   // Mapeamos pra VisitanteCelula (que aceita avulso)
   const t = tally("VisitanteCelula");
@@ -1265,6 +1341,7 @@ async function etlImportacaoLog() {
 const PHASES: Record<string, () => Promise<void>> = {
   Regional: etlRegional,
   Igreja: etlIgreja,
+  Rede: etlRede,
   CategoriaEvento: etlCategoriaEvento,
   CategoriaPregacao: etlCategoriaPregacao,
   CategoriaFinanceira: etlCategoriaFinanceira,
@@ -1302,6 +1379,7 @@ async function main() {
   try {
     await loadIgrejasNew();
     await loadRefsNew();
+    await loadRedesNew();
     console.log(`Igrejas atuais: ${idMap.Igreja.size} entradas no map (${[...idMap.Igreja.keys()].filter(k => typeof k === "number").length} com inchurchId)`);
 
     const phases = ONLY ? [ONLY] : Object.keys(PHASES);

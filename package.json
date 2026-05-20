@@ -12,7 +12,10 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "etl:dry": "tsx scripts/etl-from-legacy.ts --dry --verbose",
+    "etl:run": "tsx scripts/etl-from-legacy.ts --verbose",
+    "etl:table": "tsx scripts/etl-from-legacy.ts --verbose --table"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
