@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getCurrentUser, getDefaultRedirectForUser, rolesPodemAdministrar } from "@/lib/auth";
 
 const UNIDADES = [
   "Sede Tijuca",
@@ -18,7 +19,16 @@ const UNIDADES = [
   "Rio das Ostras",
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+  const areaHref = user ? getDefaultRedirectForUser(user) : "/login";
+  const areaLabel = user
+    ? rolesPodemAdministrar(user.role)
+      ? "Abrir painel"
+      : "Meu espaço"
+    : "Entrar";
+  const greeting = user ? `Entrou como ${user.name.split(" ")[0]}.` : null;
+
   return (
     <main className="min-h-screen">
       <header className="faixa-brand text-brand-blue-foreground">
@@ -37,8 +47,11 @@ export default function HomePage() {
             <Link href="/doar" className="hover:underline">
               Doar
             </Link>
-            <Link href="/login" className="rounded-full bg-white/20 px-4 py-1.5 hover:bg-white/30">
-              Entrar
+            <Link
+              href={areaHref}
+              className="rounded-full bg-white/20 px-4 py-1.5 hover:bg-white/30"
+            >
+              {areaLabel}
             </Link>
             <ThemeToggle />
           </nav>
@@ -58,12 +71,15 @@ export default function HomePage() {
               15 unidades · 2.731 membros · 6.662 usuários no app. Eventos, células,
               pregações, intercessão e contribuição — feitos por nós, pra nós.
             </p>
+            {greeting ? (
+              <p className="mt-3 text-sm font-medium text-brand-blue">{greeting}</p>
+            ) : null}
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/doar"
+                href={areaHref}
                 className="rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground shadow-lg shadow-primary/30 transition hover:opacity-90"
               >
-                🤝 Seja parceiro da Maranata
+                {user ? "Continuar no app" : "🤝 Seja parceiro da Maranata"}
               </Link>
               <Link
                 href="/eventos"

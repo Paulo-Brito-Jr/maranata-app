@@ -87,7 +87,7 @@ export default async function AdminHome() {
           <Link href="/admin/jornadas" className="underline">jornadas</Link> e{" "}
           <Link href="/admin/loja" className="underline">loja</Link>) já estão funcionais nesta
           plataforma com CRUDs operacionais. Auditoria do InChurch continua em{" "}
-          <Link href="https://maranata-app-paulo-brito.vercel.app" className="underline">
+          <Link href="https://maranata-app.britos.app" className="underline">
             maranata-app-dashboard
           </Link>
           .

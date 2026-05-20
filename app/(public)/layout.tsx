@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getCurrentUser, getDefaultRedirectForUser, rolesPodemAdministrar } from "@/lib/auth";
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+  const areaHref = user ? getDefaultRedirectForUser(user) : "/login";
+  const areaLabel = user
+    ? rolesPodemAdministrar(user.role)
+      ? "Painel"
+      : "Meu espaço"
+    : "Entrar";
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-border bg-background/80 backdrop-blur">
@@ -21,10 +30,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               Doar
             </Link>
             <Link
-              href="/login"
+              href={areaHref}
               className="rounded-full bg-primary px-4 py-1.5 text-primary-foreground hover:opacity-90"
             >
-              Entrar
+              {areaLabel}
             </Link>
             <ThemeToggle />
           </nav>

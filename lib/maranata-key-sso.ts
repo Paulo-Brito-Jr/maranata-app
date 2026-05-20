@@ -1,4 +1,4 @@
-const MK = process.env.MARANATA_KEY_URL ?? "https://maranata-key.vercel.app";
+const MK = process.env.MARANATA_KEY_URL ?? "https://auth.maranata.app";
 const APP_ID = process.env.MARANATA_KEY_APP_ID ?? "maranata-app";
 
 export type MKRole =

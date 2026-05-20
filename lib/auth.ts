@@ -53,6 +53,10 @@ export async function requireRole(...roles: MKRole[]): Promise<EffectiveUser> {
   return user;
 }
 
+export function getDefaultRedirectForUser(user: Pick<MKUser, "role"> | null | undefined): string {
+  return rolesPodemAdministrar(user?.role) ? "/admin" : "/membro";
+}
+
 export function rolesPodemAdministrar(role: MKRole | undefined): boolean {
   if (!role) return false;
   return ["SUPER_ADMIN", "PASTOR_DIRETORIA", "ADMIN_IGREJA"].includes(role);

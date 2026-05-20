@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser, getDefaultRedirectForUser } from "@/lib/auth";
 import { maranataKeyLogoutUrl, maranataKeyStartUrl } from "@/lib/maranata-key-sso";
 
 export const metadata = { title: "Entrar" };
@@ -8,13 +10,24 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ redir?: string }>;
 }) {
+  const user = await getCurrentUser();
+  if (user) {
+    redirect(getDefaultRedirectForUser(user));
+  }
+
   const { redir } = await searchParams;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://maranata.app";
-  const returnTo = `${appUrl}/api/auth/callback?next=${encodeURIComponent(redir ?? "/")}`;
-  const ssoUrl = maranataKeyStartUrl(returnTo);
-  const googleUrl = maranataKeyStartUrl(returnTo, { mode: "google", force: true });
-  const senhaUrl = maranataKeyStartUrl(returnTo, { mode: "password", force: true });
-  const outraContaUrl = maranataKeyLogoutUrl(`${appUrl}/login?redir=${encodeURIComponent(redir ?? "/")}`);
+  const returnTo = new URL("/api/auth/callback", appUrl);
+  if (redir?.startsWith("/")) {
+    returnTo.searchParams.set("next", redir);
+  }
+  const returnToUrl = returnTo.toString();
+  const ssoUrl = maranataKeyStartUrl(returnToUrl);
+  const googleUrl = maranataKeyStartUrl(returnToUrl, { mode: "google", force: true });
+  const senhaUrl = maranataKeyStartUrl(returnToUrl, { mode: "password", force: true });
+  const outraContaUrl = maranataKeyLogoutUrl(
+    `${appUrl}/login${redir?.startsWith("/") ? `?redir=${encodeURIComponent(redir)}` : ""}`,
+  );
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-16">

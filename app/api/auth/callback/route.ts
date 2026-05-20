@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { getDefaultRedirectForUser, SESSION_COOKIE } from "@/lib/auth";
 import { verifyMaranataKeyToken } from "@/lib/maranata-key-sso";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("st") ?? url.searchParams.get("token");
-  const next = url.searchParams.get("next") ?? "/";
+  const next = url.searchParams.get("next");
 
   if (!token) {
     return NextResponse.redirect(new URL("/login?err=missing_token", url.origin));
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/login?err=invalid_token", url.origin));
   }
 
-  const dest = next.startsWith("/") ? next : "/";
+  const dest = next?.startsWith("/") ? next : getDefaultRedirectForUser(user);
   const res = NextResponse.redirect(new URL(dest, url.origin));
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
