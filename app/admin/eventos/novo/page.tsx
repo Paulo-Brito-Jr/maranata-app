@@ -2,14 +2,18 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Field, Input, Select, Textarea, Button } from "@/components/ui/field";
 import { criarEvento } from "../actions";
+import { EhGeralAutoSugere } from "./eh-geral-auto-sugere";
 
 export const metadata = { title: "Novo evento" };
 
 export default async function NovoEventoPage() {
   const [igrejas, categorias, locais] = await Promise.all([
+    // Organizadora: aceita Sede (eventos gerais), 14 Congregações (eventos
+    // locais) e Acampamento (retiros/acampamentos próprios do sítio).
     prisma.igreja.findMany({
-      select: { id: true, nome: true, ehSede: true },
-      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      where: { ativa: true },
+      select: { id: true, nome: true, ehSede: true, tipo: true },
+      orderBy: [{ tipo: "asc" }, { nome: "asc" }],
     }),
     prisma.categoriaEvento.findMany({ orderBy: { nome: "asc" } }),
     prisma.localEvento.findMany({
@@ -39,14 +43,24 @@ export default async function NovoEventoPage() {
           <Textarea name="descricao" rows={3} />
         </Field>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Igreja organizadora" required hint="Quem cuida/promove o evento">
+          <Field label="Igreja organizadora" required hint="Quem cuida/promove o evento — Sede organiza eventos gerais, congregações organizam locais, Acampamento organiza retiros próprios.">
             <Select name="igrejaId" required>
               <option value="">Selecione...</option>
-              {igrejas.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nome}{i.ehSede ? " (Sede)" : ""}
-                </option>
-              ))}
+              <optgroup label="Sede (eventos gerais)">
+                {igrejas.filter((i) => i.tipo === "SEDE").map((i) => (
+                  <option key={i.id} value={i.id}>🏛️ {i.nome}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Congregações (eventos locais)">
+                {igrejas.filter((i) => i.tipo === "CONGREGACAO").map((i) => (
+                  <option key={i.id} value={i.id}>⛪ {i.nome}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Acampamento (retiros / acampamentos próprios)">
+                {igrejas.filter((i) => i.tipo === "ACAMPAMENTO").map((i) => (
+                  <option key={i.id} value={i.id}>🏕️ {i.nome}</option>
+                ))}
+              </optgroup>
             </Select>
           </Field>
           <Field label="Categoria">
@@ -101,16 +115,9 @@ export default async function NovoEventoPage() {
             <Input name="endereco" />
           </Field>
         </div>
-        <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3">
-          <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" name="ehGeral" className="mt-0.5" />
-            <span>
-              <strong>Evento geral</strong> — organizado pela Sede e exibido pra
-              membros das 14 unidades. Marque pra eventos como acampamentos,
-              congressos e festas-amor que envolvem todo o campo.
-            </span>
-          </label>
-        </div>
+        <EhGeralAutoSugere
+          sedeId={igrejas.find((i) => i.tipo === "SEDE")?.id ?? null}
+        />
         <div className="flex gap-6">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="publicado" defaultChecked /> Publicar

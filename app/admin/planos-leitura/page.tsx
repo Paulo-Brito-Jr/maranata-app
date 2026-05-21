@@ -29,7 +29,7 @@ export default async function PlanosLeituraPage() {
       orderBy: [{ publicado: "desc" }, { criadoEm: "desc" }],
     }),
     prisma.igreja.findMany({
-      where: { ativa: true, ehSede: false },
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
       orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),

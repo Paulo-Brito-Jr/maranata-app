@@ -20,11 +20,18 @@ datasource db {
 // ORGANIZACIONAL
 // =============================================================================
 
+enum TipoIgreja {
+  CONGREGACAO   // uma das 14 unidades locais
+  SEDE          // administração central (1 unidade)
+  ACAMPAMENTO   // sítio próprio (Acampamento Maranata) — organiza retiros
+}
+
 model Igreja {
-  id                  String   @id @default(cuid())
-  inchurchId          Int?     @unique // ex: 25524 (Tijuca) — pra cross-ref
+  id                  String     @id @default(cuid())
+  inchurchId          Int?       @unique // ex: 25524 (Tijuca) — pra cross-ref
   nome                String
   apelido             String?
+  tipo                TipoIgreja @default(CONGREGACAO)
   endereco            String?
   cidade              String?
   estado              String?

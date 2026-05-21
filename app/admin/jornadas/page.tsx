@@ -31,7 +31,7 @@ export default async function JornadasPage() {
     prisma.pessoaJornada.count(),
     ctx.tipo === "todas" || ctx.tipo === "selecionada"
       ? prisma.igreja.findMany({
-          where: { ativa: true, ehSede: false },
+          where: { ativa: true, tipo: "CONGREGACAO" as const },
           orderBy: { nome: "asc" },
           select: { id: true, nome: true, apelido: true },
         })

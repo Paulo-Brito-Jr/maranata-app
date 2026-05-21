@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { MinisterioGeral } from "@prisma/client";
+import { TipoIgreja, type MinisterioGeral } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, type EffectiveUser } from "@/lib/auth";
 
@@ -38,8 +38,16 @@ export async function getIgrejasAcessiveis(
   opts?: { ministerioPagina?: MinisterioGeral; incluirSede?: boolean },
 ): Promise<IgrejaAcessivel[]> {
   const incluirSede = opts?.incluirSede ?? false;
+  // Por padrão lista apenas CONGREGACAOes (forms locais). Quando incluirSede=true
+  // inclui também SEDE (navegação topbar). ACAMPAMENTO nunca entra como
+  // "unidade" — só aparece em selects de "organizadora" via helper separado.
   const todas = await prisma.igreja.findMany({
-    where: { ativa: true, ...(incluirSede ? {} : { ehSede: false }) },
+    where: {
+      ativa: true,
+      tipo: incluirSede
+        ? { in: [TipoIgreja.CONGREGACAO, TipoIgreja.SEDE] }
+        : TipoIgreja.CONGREGACAO,
+    },
     orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
     select: { id: true, nome: true, apelido: true, ehSede: true },
   });

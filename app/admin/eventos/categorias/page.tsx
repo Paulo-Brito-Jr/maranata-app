@@ -28,7 +28,7 @@ export default async function CategoriasEventoPage() {
       orderBy: [{ igrejaId: "asc" }, { nome: "asc" }],
     }),
     prisma.igreja.findMany({
-      where: { ativa: true, ehSede: false },
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
       orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),
