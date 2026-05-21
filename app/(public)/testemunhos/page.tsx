@@ -59,8 +59,8 @@ export default async function TestemunhosPublicosPage() {
         <h1 className="mt-1 text-3xl font-bold">Testemunhos da família Maranata</h1>
         <p className="mt-1 text-muted-foreground">
           {total > 0
-            ? `${total} testemunhos publicados pelas 15 unidades.`
-            : "Vidas transformadas por Cristo nas 15 unidades."}
+            ? `${total} testemunhos publicados pelas 14 unidades.`
+            : "Vidas transformadas por Cristo nas 14 unidades."}
         </p>
       </header>
 

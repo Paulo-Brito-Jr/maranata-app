@@ -16,7 +16,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!podeAcessar) redirect("/unauthorized?from=/admin");
 
   const impersonando = user.impersonando;
-  const igrejaCtx = await getIgrejaContexto();
+  // No topbar inclui a Sede como opção de filtro (admin pode focar na Sede
+  // pra ver eventos gerais, lançamentos centralizados, etc.).
+  const igrejaCtx = await getIgrejaContexto({ incluirSede: true });
 
   return (
     <div className="flex min-h-screen flex-col">

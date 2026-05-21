@@ -255,7 +255,7 @@ export default async function FinanceiroPage({
         <section className="rounded-2xl border border-dashed border-border bg-card/40 p-5">
           <h2 className="text-sm font-semibold">Multi-conta por igreja</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cada uma das 15 igrejas já tem uma conta bancária cadastrada. Para mostrar todos os
+            Cada uma das 14 igrejas + Sede já tem uma conta bancária cadastrada. Para mostrar todos os
             saldos por conta nesta tela, ative a feature flag{" "}
             <code className="rounded bg-secondary px-1.5 py-0.5">multiple_financial_account</code>.
           </p>

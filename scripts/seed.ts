@@ -5,7 +5,8 @@ const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL!;
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const IGREJAS = [
-  { inchurchId: 25524, nome: "Tijuca", apelido: "Sede", ehSede: true, endereco: "Rua Guapeni, 27", cidade: "Rio de Janeiro", estado: "RJ" },
+  { inchurchId: 25256, nome: "Sede", apelido: "Sede Administrativa", ehSede: true, endereco: "Rua Guapeni, 27", cidade: "Rio de Janeiro", estado: "RJ" },
+  { inchurchId: 25524, nome: "Tijuca", apelido: null, ehSede: false, endereco: "Rua Conde de Bonfim, 229", cidade: "Rio de Janeiro", estado: "RJ" },
   { inchurchId: 25525, nome: "Méier", endereco: "Rua Adriano, 115", cidade: "Rio de Janeiro", estado: "RJ" },
   { inchurchId: 25526, nome: "Duque de Caxias", endereco: "Rua Humberto de Campos, 107", cidade: "Duque de Caxias", estado: "RJ" },
   { inchurchId: 25527, nome: "Copacabana", endereco: "Rua Francisco Sá, 88", cidade: "Rio de Janeiro", estado: "RJ" },

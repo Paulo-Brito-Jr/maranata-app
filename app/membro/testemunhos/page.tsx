@@ -43,7 +43,7 @@ export default async function MembroTestemunhos() {
         </p>
         <h1 className="mt-1 text-2xl font-bold">Testemunhos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Vidas tocadas pela graça nas 15 unidades.
+          Vidas tocadas pela graça nas 14 unidades.
         </p>
       </header>
 

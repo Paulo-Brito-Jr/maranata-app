@@ -28,7 +28,7 @@ export default async function LancamentosPage() {
           </Link>
           <h1 className="mt-2 text-3xl font-bold">Lançamentos</h1>
           <p className="text-muted-foreground">
-            Entradas e saídas em todas as 15 unidades.
+            Entradas e saídas em todas as 14 unidades.
           </p>
         </div>
         <Link

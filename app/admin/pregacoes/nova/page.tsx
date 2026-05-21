@@ -9,8 +9,8 @@ export default async function NovaPregacaoPage() {
   const [categorias, igrejas] = await Promise.all([
     prisma.categoriaPregacao.findMany({ orderBy: { nome: "asc" } }),
     prisma.igreja.findMany({
-      where: { ativa: true },
-      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      where: { ativa: true, ehSede: false },
+      orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),
   ]);
@@ -55,10 +55,10 @@ export default async function NovaPregacaoPage() {
         </Field>
         <Field
           label="Escopo"
-          hint="Geral = aparece pra todas as 15 unidades. Local = só pra membros daquela unidade."
+          hint="Geral = aparece pra todas as 14 unidades. Local = só pra membros daquela unidade."
         >
           <Select name="igrejaId" defaultValue="GERAL">
-            <option value="GERAL">🌐 Geral (todas as 15 unidades)</option>
+            <option value="GERAL">🌐 Geral (todas as 14 unidades)</option>
             {igrejas.map((ig) => (
               <option key={ig.id} value={ig.id}>
                 📍 Local — {ig.apelido ?? ig.nome}

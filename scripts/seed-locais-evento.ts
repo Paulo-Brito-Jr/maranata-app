@@ -26,10 +26,12 @@ async function main() {
   });
   console.log("✓ Acampamento Maranata:", acamp.id);
 
-  // 2. Cada uma das 15 igrejas vira também um LocalEvento (tipo=IGREJA)
+  // 2. Cada uma das 14 congregações vira também um LocalEvento (tipo=IGREJA).
+  // A Sede NÃO entra como local físico — eventos da Sede acontecem nas 14
+  // congregações ou no Acampamento Maranata.
   const igrejas = await prisma.igreja.findMany({
-    where: { ativa: true },
-    orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+    where: { ativa: true, ehSede: false },
+    orderBy: { nome: "asc" },
     select: { id: true, nome: true, apelido: true, endereco: true, cidade: true, estado: true, cep: true },
   });
 

@@ -62,7 +62,7 @@ export default async function NovoEventoPage() {
         </div>
         <Field
           label="Local físico do evento"
-          hint="Acontece em uma das 15 unidades, no Acampamento Maranata ou em outro local cadastrado. Deixe em branco pra usar o endereço livre abaixo."
+          hint="Acontece em uma das 14 unidades, no Acampamento Maranata ou em outro local cadastrado. Deixe em branco pra usar o endereço livre abaixo."
         >
           <Select name="localEventoId" defaultValue="">
             <option value="">— Texto livre (campo Local/Endereço abaixo) —</option>
@@ -106,7 +106,7 @@ export default async function NovoEventoPage() {
             <input type="checkbox" name="ehGeral" className="mt-0.5" />
             <span>
               <strong>Evento geral</strong> — organizado pela Sede e exibido pra
-              membros das 15 unidades. Marque pra eventos como acampamentos,
+              membros das 14 unidades. Marque pra eventos como acampamentos,
               congressos e festas-amor que envolvem todo o campo.
             </span>
           </label>

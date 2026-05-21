@@ -22,17 +22,24 @@ export type IgrejaContexto =
  * Lista as igrejas que o usuário pode visualizar dado seu papel + (opcional)
  * ministério geral que ele cobre.
  *
- * - SUPER_ADMIN / PASTOR_DIRETORIA: vê todas as 15 unidades.
+ * Estrutura: 1 Sede (administrativa, ehSede=true) + 14 Congregações.
+ *
+ * - SUPER_ADMIN / PASTOR_DIRETORIA: vê todas (Sede + 14 congregações).
  * - PastorGeralMinisterio do ministerioPagina: vê todas, mas só naquela área.
- * - ADMIN_IGREJA: só a sua igrejaId (vindo do JWT).
- * - Demais papéis: só a sua igrejaId.
+ * - ADMIN_IGREJA / outros: só a sua igrejaId (vindo do JWT).
+ *
+ * Por padrão exclui a Sede do retorno (`incluirSede=false`), porque pra fins
+ * de filtro local "Sede" é o equivalente a "Geral" — listar como opção
+ * separada confunde. Quando precisar incluir (ex: navegação topbar), passar
+ * `incluirSede=true`.
  */
 export async function getIgrejasAcessiveis(
   user: EffectiveUser,
-  opts?: { ministerioPagina?: MinisterioGeral },
+  opts?: { ministerioPagina?: MinisterioGeral; incluirSede?: boolean },
 ): Promise<IgrejaAcessivel[]> {
+  const incluirSede = opts?.incluirSede ?? false;
   const todas = await prisma.igreja.findMany({
-    where: { ativa: true },
+    where: { ativa: true, ...(incluirSede ? {} : { ehSede: false }) },
     orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
     select: { id: true, nome: true, apelido: true, ehSede: true },
   });
@@ -73,6 +80,7 @@ export async function getIgrejasAcessiveis(
  */
 export async function getIgrejaContexto(opts?: {
   ministerioPagina?: MinisterioGeral;
+  incluirSede?: boolean;
 }): Promise<IgrejaContexto> {
   const user = await getCurrentUser();
   if (!user) return { tipo: "sem-acesso" };

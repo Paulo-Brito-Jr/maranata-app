@@ -61,7 +61,7 @@ export default async function PastoresGeraisPage({
   return (
     <ModuloShell
       titulo="Pastores gerais de ministério"
-      descricao="Pastores que cuidam de um ministério em todas as 15 unidades. Ganham acesso transversal nas áreas do seu ministério."
+      descricao="Pastores que cuidam de um ministério em todas as 14 unidades. Ganham acesso transversal nas áreas do seu ministério."
       stats={[
         { label: "Pastores designados", valor: new Set(vinculos.map((v) => v.usuarioId)).size },
         { label: "Vínculos ativos", valor: vinculos.length },

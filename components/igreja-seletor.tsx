@@ -25,7 +25,7 @@ export function IgrejaSeletor({ ctx }: { ctx: IgrejaContexto }) {
   const atualLabel =
     ctx.tipo === "selecionada"
       ? ctx.igreja.apelido ?? ctx.igreja.nome
-      : "Todas as unidades";
+      : "Sede + 14 unidades";
 
   async function escolher(igrejaId: string | null) {
     setOpen(false);
@@ -56,7 +56,7 @@ export function IgrejaSeletor({ ctx }: { ctx: IgrejaContexto }) {
               ctx.tipo === "todas" ? "font-medium text-primary" : ""
             }`}
           >
-            Todas as unidades
+            Todas (Sede + 14 unidades)
           </button>
           <div className="border-t border-border" />
           {igrejas.map((ig) => (
@@ -71,8 +71,8 @@ export function IgrejaSeletor({ ctx }: { ctx: IgrejaContexto }) {
             >
               <span>{ig.apelido ?? ig.nome}</span>
               {ig.ehSede && (
-                <span className="text-[10px] uppercase text-muted-foreground">
-                  sede
+                <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                  Sede
                 </span>
               )}
             </button>

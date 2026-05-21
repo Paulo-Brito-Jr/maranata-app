@@ -147,7 +147,7 @@ export default async function CelulasPublicasPage({
               defaultValue={igrejaSel ?? ""}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
-              <option value="">Todas as 15 unidades</option>
+              <option value="">Todas as 14 unidades</option>
               {igrejas.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.nome}

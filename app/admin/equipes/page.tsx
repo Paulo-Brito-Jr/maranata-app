@@ -29,8 +29,8 @@ export default async function EquipesPage() {
       orderBy: [{ ativa: "desc" }, { igrejaId: "asc" }, { nome: "asc" }],
     }),
     prisma.igreja.findMany({
-      where: { ativa: true },
-      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      where: { ativa: true, ehSede: false },
+      orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),
   ]);
@@ -60,7 +60,7 @@ export default async function EquipesPage() {
           <Field
             label="Escopo"
             className="md:col-span-2"
-            hint="Geral = corporativa, atende todas as 15 unidades (ex: ministério de louvor central). Local = só naquela unidade (ex: diaconia da Tijuca)."
+            hint="Geral = corporativa, atende todas as 14 unidades (ex: ministério de louvor central). Local = só naquela unidade (ex: diaconia da Tijuca)."
           >
             <Select name="igrejaId" defaultValue="GERAL">
               <option value="GERAL">🌐 Geral (corporativo)</option>

@@ -105,7 +105,7 @@ export default async function HomePage() {
               Tudo da sua igreja num só lugar.
             </h1>
             <p className="mt-5 text-lg text-muted-foreground">
-              15 unidades · 2.731 membros · 6.662 usuários no app. Eventos,
+              14 unidades · 2.731 membros · 6.662 usuários no app. Eventos,
               células, pregações, intercessão e contribuição — feitos por nós,
               pra nós.
             </p>

@@ -19,7 +19,7 @@ export default async function KidsHub() {
   const inicioHoje = new Date();
   inicioHoje.setHours(0, 0, 0, 0);
 
-  // Kids é um ministério — pastor geral de KIDS pode ver as 15 unidades.
+  // Kids é um ministério — pastor geral de KIDS pode ver as 14 unidades.
   const ctx = await getIgrejaContexto({ ministerioPagina: "KIDS" });
   const filtroIgreja = filtroIgrejaWhere(ctx);
 

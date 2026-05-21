@@ -17,7 +17,7 @@ function cicloPadrao(): string {
 }
 
 export default async function EbdClassesPage() {
-  // EBD existe em todas as 15 unidades (igrejaId required).
+  // EBD existe em todas as 14 unidades (igrejaId required).
   const ctx = await getIgrejaContexto();
   const filtroIgreja = filtroIgrejaWhere(ctx);
 
@@ -40,7 +40,7 @@ export default async function EbdClassesPage() {
   return (
     <ModuloShell
       titulo="EBD — Escola Bíblica Dominical"
-      descricao="Existe em todas as 15 unidades. Cada aluno se inscreve em 1 classe por ciclo trimestral. Sem notas formais — só presença."
+      descricao="Existe em todas as 14 unidades. Cada aluno se inscreve em 1 classe por ciclo trimestral. Sem notas formais — só presença."
       stats={[
         { label: "Classes ativas", valor: classes.filter((c) => c.ativa).length },
         { label: "Total inscritos", valor: classes.reduce((a, c) => a + c._count.inscricoes, 0) },

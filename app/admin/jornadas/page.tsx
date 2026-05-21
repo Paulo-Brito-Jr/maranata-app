@@ -31,8 +31,8 @@ export default async function JornadasPage() {
     prisma.pessoaJornada.count(),
     ctx.tipo === "todas" || ctx.tipo === "selecionada"
       ? prisma.igreja.findMany({
-          where: { ativa: true },
-          orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+          where: { ativa: true, ehSede: false },
+          orderBy: { nome: "asc" },
           select: { id: true, nome: true, apelido: true },
         })
       : Promise.resolve([]),
@@ -83,7 +83,7 @@ export default async function JornadasPage() {
               hint="Geral = disponível pra todas as unidades. Local = só pra aquela unidade."
             >
               <Select name="igrejaId" defaultValue="GERAL">
-                <option value="GERAL">🌐 Geral (todas as 15 unidades)</option>
+                <option value="GERAL">🌐 Geral (todas as 14 unidades)</option>
                 {igrejas.map((ig) => (
                   <option key={ig.id} value={ig.id}>
                     📍 Local — {ig.apelido ?? ig.nome}

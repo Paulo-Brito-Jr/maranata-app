@@ -29,8 +29,8 @@ export default async function PlanosLeituraPage() {
       orderBy: [{ publicado: "desc" }, { criadoEm: "desc" }],
     }),
     prisma.igreja.findMany({
-      where: { ativa: true },
-      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      where: { ativa: true, ehSede: false },
+      orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),
   ]);
@@ -65,7 +65,7 @@ export default async function PlanosLeituraPage() {
             hint="Geral aparece pra todos. Local só pra membros daquela unidade."
           >
             <Select name="igrejaId" defaultValue="GERAL">
-              <option value="GERAL">🌐 Geral (todas as 15 unidades)</option>
+              <option value="GERAL">🌐 Geral (todas as 14 unidades)</option>
               {igrejas.map((ig) => (
                 <option key={ig.id} value={ig.id}>
                   📍 Local — {ig.apelido ?? ig.nome}

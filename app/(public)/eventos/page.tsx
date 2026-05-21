@@ -85,7 +85,7 @@ export default async function EventosPublicosPage() {
         </p>
         <h1 className="mt-1 text-3xl font-bold">Eventos</h1>
         <p className="mt-1 text-muted-foreground">
-          Celebrações, conferências e encontros nas 15 unidades.
+          Celebrações, conferências e encontros nas 14 unidades.
         </p>
       </header>
 

@@ -25,7 +25,7 @@ export default async function MembroEventos() {
         </p>
         <h1 className="mt-1 text-2xl font-bold">Próximos eventos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          As celebrações e encontros nas 15 unidades.
+          As celebrações e encontros nas 14 unidades.
         </p>
       </header>
 

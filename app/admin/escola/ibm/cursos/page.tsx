@@ -25,8 +25,8 @@ export default async function CursosPage() {
       orderBy: { nome: "asc" },
     }),
     prisma.igreja.findMany({
-      where: { ativa: true },
-      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      where: { ativa: true, ehSede: false },
+      orderBy: { nome: "asc" },
       select: { id: true, nome: true, apelido: true },
     }),
   ]);
@@ -59,7 +59,7 @@ export default async function CursosPage() {
           <Field
             label="Escopo"
             className="md:col-span-2"
-            hint="Geral = curso corporativo, válido nas 15 unidades. Local = curso de uma unidade específica."
+            hint="Geral = curso corporativo, válido nas 14 unidades. Local = curso de uma unidade específica."
           >
             <Select name="igrejaId" defaultValue="GERAL">
               <option value="GERAL">🌐 Geral (corporativo / sede)</option>
