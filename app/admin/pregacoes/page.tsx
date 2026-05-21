@@ -10,7 +10,7 @@ export const metadata = { title: "Pregações" };
 export const dynamic = "force-dynamic";
 
 export default async function PregacoesPage() {
-  const [pregacoes, totalSeries, totalTransmissoes, totalBanners, agg, top10] = await Promise.all([
+  const [pregacoes, totalSeries, , totalBanners, agg, top10] = await Promise.all([
     prisma.pregacao.findMany({
       include: {
         categoria: { select: { nome: true } },
