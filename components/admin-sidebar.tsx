@@ -55,7 +55,7 @@ const GRUPOS: Grupo[] = [
   {
     titulo: "Comunidade",
     itens: [
-      { href: "/admin/celulas", label: "Células", icon: Heart },
+      { href: "/admin/celulas", label: "Pequenos Grupos", icon: Heart },
       { href: "/admin/equipes", label: "Equipes ministeriais", icon: HandHeart },
       { href: "/admin/intercessao", label: "Intercessão", icon: Sparkles },
       { href: "/admin/testemunhos", label: "Testemunhos", icon: MessageCircleHeart },

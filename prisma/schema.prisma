@@ -303,6 +303,11 @@ model EquipeMembro {
 // CÉLULAS
 // =============================================================================
 
+enum TipoRede {
+  PG    // Pequenos Grupos (células tradicionais)
+  EBD   // Escola Bíblica Dominical (importada pra EbdClasse)
+}
+
 enum StatusCelula {
   ATIVA
   INATIVA
@@ -317,9 +322,12 @@ model Rede {
   cor         String?
   supervisor  String?
   igrejaId    String?
+  tipo        TipoRede @default(PG)
   totalCelulas Int     @default(0)
   celulas     Celula[]
   criadaEm    DateTime @default(now())
+
+  @@index([tipo])
 }
 
 model Celula {

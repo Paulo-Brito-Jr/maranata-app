@@ -4,7 +4,7 @@ import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
 import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
-export const metadata = { title: "Células" };
+export const metadata = { title: "Pequenos Grupos" };
 export const dynamic = "force-dynamic";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -13,9 +13,14 @@ export default async function CelulasPage() {
   const ctx = await getIgrejaContexto();
   const filtroIgreja = filtroIgrejaWhere(ctx);
 
+  // PG = células sem rede OU rede.tipo=PG. EBD migrou pra /admin/escola/ebd.
+  const ehPGWhere = {
+    OR: [{ redeId: null }, { rede: { tipo: "PG" as const } }],
+  };
+
   const [celulas, totalParticipantes, totalRedes, totalVisitantes] = await Promise.all([
     prisma.celula.findMany({
-      where: filtroIgreja,
+      where: { ...filtroIgreja, ...ehPGWhere },
       include: {
         igreja: { select: { nome: true } },
         rede: { select: { nome: true, cor: true } },
@@ -26,12 +31,20 @@ export default async function CelulasPage() {
     prisma.participanteCelula.count({
       where: {
         ativo: true,
-        ...(filtroIgreja.igrejaId ? { celula: { igrejaId: filtroIgreja.igrejaId } } : {}),
+        celula: {
+          ...ehPGWhere,
+          ...(filtroIgreja.igrejaId ? { igrejaId: filtroIgreja.igrejaId } : {}),
+        },
       },
     }),
-    prisma.rede.count(),
+    prisma.rede.count({ where: { tipo: "PG" as const } }),
     prisma.visitanteCelula.count({
-      where: filtroIgreja.igrejaId ? { celula: { igrejaId: filtroIgreja.igrejaId } } : {},
+      where: {
+        celula: {
+          ...ehPGWhere,
+          ...(filtroIgreja.igrejaId ? { igrejaId: filtroIgreja.igrejaId } : {}),
+        },
+      },
     }),
   ]);
 
@@ -39,15 +52,15 @@ export default async function CelulasPage() {
 
   return (
     <ModuloShell
-      titulo="Células"
-      descricao="Redes, células, líderes, participantes e relatórios."
+      titulo="Pequenos Grupos"
+      descricao="Redes PG, grupos, líderes, participantes e relatórios. (As Redes EBD foram migradas pra Escola Bíblica → EBD.)"
       stats={[
-        { label: "Células ativas", valor: ativas, ref: "InChurch: 62" },
-        { label: "Total redes", valor: totalRedes },
-        { label: "Participantes", valor: totalParticipantes, ref: "InChurch: 713" },
-        { label: "Visitantes", valor: totalVisitantes, ref: "InChurch: 85" },
+        { label: "Grupos ativos", valor: ativas },
+        { label: "Redes PG", valor: totalRedes },
+        { label: "Participantes", valor: totalParticipantes },
+        { label: "Visitantes", valor: totalVisitantes },
       ]}
-      acoes={[{ href: "/admin/celulas/nova", label: "Nova célula" }]}
+      acoes={[{ href: "/admin/celulas/nova", label: "Novo grupo" }]}
     >
       {celulas.length === 0 ? (
         <EmptyState
