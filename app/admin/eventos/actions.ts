@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 const EventoInput = z.object({
   igrejaId: z.string().min(1),
   categoriaId: z.string().optional().or(z.literal("")),
+  localEventoId: z.string().optional().or(z.literal("")),
   titulo: z.string().min(2),
   slug: z
     .string()
@@ -20,6 +21,7 @@ const EventoInput = z.object({
   endereco: z.string().optional().or(z.literal("")),
   publicado: z.string().optional().or(z.literal("")),
   inscricoesAbertas: z.string().optional().or(z.literal("")),
+  ehGeral: z.string().optional().or(z.literal("")),
 });
 
 export async function criarEvento(formData: FormData) {
@@ -29,6 +31,7 @@ export async function criarEvento(formData: FormData) {
     data: {
       igrejaId: data.igrejaId,
       categoriaId: data.categoriaId || null,
+      localEventoId: data.localEventoId || null,
       titulo: data.titulo,
       slug: data.slug,
       descricao: data.descricao || null,
@@ -38,6 +41,7 @@ export async function criarEvento(formData: FormData) {
       endereco: data.endereco || null,
       publicado: data.publicado === "on",
       inscricoesAbertas: data.inscricoesAbertas === "on",
+      ehGeral: data.ehGeral === "on",
     },
   });
   revalidatePath("/admin/eventos");

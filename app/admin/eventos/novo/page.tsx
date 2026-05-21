@@ -6,9 +6,17 @@ import { criarEvento } from "../actions";
 export const metadata = { title: "Novo evento" };
 
 export default async function NovoEventoPage() {
-  const [igrejas, categorias] = await Promise.all([
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+  const [igrejas, categorias, locais] = await Promise.all([
+    prisma.igreja.findMany({
+      select: { id: true, nome: true, ehSede: true },
+      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+    }),
     prisma.categoriaEvento.findMany({ orderBy: { nome: "asc" } }),
+    prisma.localEvento.findMany({
+      where: { ativo: true },
+      orderBy: [{ tipo: "asc" }, { nome: "asc" }],
+      select: { id: true, nome: true, tipo: true },
+    }),
   ]);
 
   return (
@@ -31,12 +39,12 @@ export default async function NovoEventoPage() {
           <Textarea name="descricao" rows={3} />
         </Field>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Igreja" required>
+          <Field label="Igreja organizadora" required hint="Quem cuida/promove o evento">
             <Select name="igrejaId" required>
               <option value="">Selecione...</option>
               {igrejas.map((i) => (
                 <option key={i.id} value={i.id}>
-                  {i.nome}
+                  {i.nome}{i.ehSede ? " (Sede)" : ""}
                 </option>
               ))}
             </Select>
@@ -52,6 +60,31 @@ export default async function NovoEventoPage() {
             </Select>
           </Field>
         </div>
+        <Field
+          label="Local físico do evento"
+          hint="Acontece em uma das 15 unidades, no Acampamento Maranata ou em outro local cadastrado. Deixe em branco pra usar o endereço livre abaixo."
+        >
+          <Select name="localEventoId" defaultValue="">
+            <option value="">— Texto livre (campo Local/Endereço abaixo) —</option>
+            <optgroup label="Acampamento">
+              {locais.filter((l) => l.tipo === "ACAMPAMENTO").map((l) => (
+                <option key={l.id} value={l.id}>📍 {l.nome}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Unidades IME Maranata">
+              {locais.filter((l) => l.tipo === "IGREJA").map((l) => (
+                <option key={l.id} value={l.id}>{l.nome}</option>
+              ))}
+            </optgroup>
+            {locais.some((l) => l.tipo === "EXTERNO") && (
+              <optgroup label="Locais externos">
+                {locais.filter((l) => l.tipo === "EXTERNO").map((l) => (
+                  <option key={l.id} value={l.id}>{l.nome}</option>
+                ))}
+              </optgroup>
+            )}
+          </Select>
+        </Field>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Início" required>
             <Input type="datetime-local" name="inicio" required />
@@ -67,6 +100,16 @@ export default async function NovoEventoPage() {
           <Field label="Endereço">
             <Input name="endereco" />
           </Field>
+        </div>
+        <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3">
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="ehGeral" className="mt-0.5" />
+            <span>
+              <strong>Evento geral</strong> — organizado pela Sede e exibido pra
+              membros das 15 unidades. Marque pra eventos como acampamentos,
+              congressos e festas-amor que envolvem todo o campo.
+            </span>
+          </label>
         </div>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 text-sm">
