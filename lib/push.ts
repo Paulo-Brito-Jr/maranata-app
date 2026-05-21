@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import type { MinisterioGeral } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -27,7 +28,21 @@ export type PushAlvo =
   | { tipo: "USUARIO"; usuarioId: string }
   | { tipo: "USUARIOS"; usuarioIds: string[] }
   | { tipo: "USUARIO_APP"; usuarioAppId: string }
-  | { tipo: "IGREJA"; igrejaId: string };
+  | { tipo: "IGREJA"; igrejaId: string }
+  /**
+   * Targeting combinável e multi-seleção. Cada array adiciona um AND entre
+   * dimensões; dentro do array é OR (qualquer item match).
+   * - igrejaIds: lista de unidades específicas
+   * - regionalIds: lista de regionais (todas igrejas das regionais)
+   * - ministerios: lista de ministérios (Kids hoje, demais futuro)
+   * Listas vazias = sem filtro nessa dimensão (broadcast).
+   */
+  | {
+      tipo: "SEGMENTADO";
+      igrejaIds?: string[];
+      regionalIds?: string[];
+      ministerios?: MinisterioGeral[];
+    };
 
 export async function enviarPush(
   alvo: PushAlvo,
@@ -53,6 +68,49 @@ export async function enviarPush(
             { usuarioApp: { igrejaId: alvo.igrejaId } },
           ],
         };
+      case "SEGMENTADO": {
+        const conditions: Record<string, unknown>[] = [];
+
+        // Igrejas (lista): OR entre as escolhidas.
+        const igrejaIds = alvo.igrejaIds ?? [];
+        const regionalIds = alvo.regionalIds ?? [];
+        const ministerios = alvo.ministerios ?? [];
+
+        if (igrejaIds.length > 0 || regionalIds.length > 0) {
+          const orUnidades: Record<string, unknown>[] = [];
+          if (igrejaIds.length > 0) {
+            orUnidades.push({
+              usuario: { membro: { igrejaId: { in: igrejaIds } } },
+            });
+            orUnidades.push({ usuarioApp: { igrejaId: { in: igrejaIds } } });
+          }
+          if (regionalIds.length > 0) {
+            orUnidades.push({
+              usuario: { membro: { igreja: { regionalId: { in: regionalIds } } } },
+            });
+            orUnidades.push({
+              usuarioApp: { igreja: { regionalId: { in: regionalIds } } },
+            });
+          }
+          conditions.push({ OR: orUnidades });
+        }
+
+        // Ministério: hoje só Kids tem vínculo via Membro.responsaveisKids.
+        // Outros ministérios virão quando tiverem tabela própria.
+        if (ministerios.includes("KIDS")) {
+          conditions.push({
+            usuario: {
+              membro: {
+                responsaveisKids: { some: { crianca: { ativa: true } } },
+              },
+            },
+          });
+        }
+
+        return conditions.length === 0
+          ? { ativa: true }
+          : { ativa: true, AND: conditions };
+      }
     }
   })();
 

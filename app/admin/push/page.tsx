@@ -8,6 +8,7 @@ import {
   excluirPushAction,
 } from "./actions";
 import { PushComposer } from "./push-composer";
+import { PushSegmentado } from "./push-segmentado";
 
 export const metadata = { title: "Comunicação" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,8 @@ export default async function PushPage() {
     totalAssinantes,
     totalUsuarios,
     igrejas,
+    igrejasParaSeg,
+    regionais,
     celulas,
     templates,
   ] = await Promise.all([
@@ -37,6 +40,15 @@ export default async function PushPage() {
     prisma.pushSubscription.count({ where: { ativa: true } }),
     prisma.usuarioApp.count({ where: filtroIgreja }),
     prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.igreja.findMany({
+      where: { ativa: true },
+      select: { id: true, nome: true, apelido: true, tipo: true },
+      orderBy: [{ tipo: "asc" }, { nome: "asc" }],
+    }),
+    prisma.regional.findMany({
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" },
+    }),
     prisma.celula.findMany({
       select: { id: true, nome: true },
       where: { status: "ATIVA" },
@@ -72,7 +84,16 @@ export default async function PushPage() {
       ]}
       acoes={[{ href: "/admin/push/templates", label: "Templates" }]}
     >
-      <PushComposer igrejas={igrejas} celulas={celulas} templates={templates} />
+      <PushSegmentado igrejas={igrejasParaSeg} regionais={regionais} />
+
+      <details className="rounded-2xl border border-border bg-card p-4">
+        <summary className="cursor-pointer text-sm font-medium">
+          Modo simples (push rápido, sem segmentação avançada)
+        </summary>
+        <div className="mt-4">
+          <PushComposer igrejas={igrejas} celulas={celulas} templates={templates} />
+        </div>
+      </details>
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-widest text-muted-foreground">

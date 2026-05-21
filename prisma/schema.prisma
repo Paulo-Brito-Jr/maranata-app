@@ -84,6 +84,7 @@ model Regional {
   descricao String?
   criadaEm  DateTime @default(now())
   igrejas   Igreja[]
+  pushes    PushNotification[]
 }
 
 // =============================================================================
@@ -799,8 +800,16 @@ enum PushAlvo {
 
 model PushNotification {
   id          String   @id @default(cuid())
+  // Single (legado — compat com push antigos)
   igrejaId    String?
   igreja      Igreja?  @relation(fields: [igrejaId], references: [id])
+  regionalId  String?
+  regional    Regional? @relation(fields: [regionalId], references: [id])
+  ministerio  MinisterioGeral?
+  // Multi-seleção (novo): listas vazias = sem filtro nessa dimensão.
+  igrejasIds  String[]  @default([])
+  regionaisIds String[] @default([])
+  ministerios MinisterioGeral[] @default([])
   titulo      String
   corpo       String
   url         String?
@@ -817,6 +826,8 @@ model PushNotification {
 
   @@index([agendadoPara])
   @@index([enviadoEm])
+  @@index([regionalId])
+  @@index([ministerio])
 }
 
 model PushTemplate {
