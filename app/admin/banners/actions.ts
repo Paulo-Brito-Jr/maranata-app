@@ -42,6 +42,33 @@ export async function toggleBannerAction(id: string, ativo: boolean) {
   revalidatePath("/");
 }
 
+export async function atualizarBannerAction(id: string, formData: FormData) {
+  const titulo = String(formData.get("titulo") ?? "").trim();
+  if (!titulo) return;
+  const subtitulo = String(formData.get("subtitulo") ?? "").trim() || null;
+  const imagemUrl = String(formData.get("imagemUrl") ?? "").trim() || null;
+  const linkUrl = String(formData.get("linkUrl") ?? "").trim() || null;
+  const ordem = Number(formData.get("ordem") ?? 0) || 0;
+  const igrejaIdRaw = String(formData.get("igrejaId") ?? "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
+
+  await prisma.banner.update({
+    where: { id },
+    data: {
+      titulo,
+      subtitulo,
+      imagemUrl,
+      linkUrl,
+      ordem,
+      igrejaId,
+      inicio: dateOrNull(formData.get("inicio")),
+      fim: dateOrNull(formData.get("fim")),
+    },
+  });
+  revalidatePath("/admin/banners");
+  revalidatePath("/");
+}
+
 export async function deletarBannerAction(id: string) {
   await prisma.banner.delete({ where: { id } });
   revalidatePath("/admin/banners");

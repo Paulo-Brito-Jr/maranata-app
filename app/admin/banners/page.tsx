@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input, Button, Select } from "@/components/ui/field";
@@ -138,6 +139,12 @@ export default async function AdminBanners() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
+                  <Link
+                    href={`/admin/banners/${b.id}/editar`}
+                    className="rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/25"
+                  >
+                    Editar
+                  </Link>
                   <form action={toggleBannerAction.bind(null, b.id, !b.ativo)}>
                     <button
                       type="submit"

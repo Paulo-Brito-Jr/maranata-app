@@ -125,6 +125,7 @@ export default async function AdminDoadoresPage({
                 <th className="px-4 py-3">Igreja</th>
                 <th className="px-4 py-3">Membro</th>
                 <th className="px-4 py-3">PIX</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -159,6 +160,14 @@ export default async function AdminDoadoresPage({
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 text-right text-xs">
+                    <Link
+                      href={`/admin/doadores/${d.id}/editar`}
+                      className="text-primary hover:underline"
+                    >
+                      editar
+                    </Link>
                   </td>
                 </tr>
               ))}
