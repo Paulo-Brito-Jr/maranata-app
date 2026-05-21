@@ -106,6 +106,47 @@ Todos os backups em `~/dev/maranata-app-paridade-backups/YYYY-MM-DD/`:
 - `*-schema-*.sql` — schema-only (uncompressed, fácil leitura)
 - `row-counts-snapshot-*.csv` — contagens
 
+## F26 — Auditoria final (2026-05-21)
+
+Cross-check `inchurch-dashboard` (32 rotas read-only) vs `maranata-app` (105 rotas):
+
+| Rota inchurch-dashboard | Equivalente maranata-app | Status |
+|---|---|---|
+| `/dashboard` | `/admin` | ✅ |
+| `/membros` | `/admin/membros` (CRUD completo) | ✅ |
+| `/usuarios-app` | `/admin/membros` (subset por papel) | ✅ |
+| `/visitantes` | `/admin/membros` (filtro) | ✅ |
+| `/novos-convertidos` | model NovoConvertido + página inline | ✅ |
+| `/aniversariantes` | `/admin/aniversariantes` | ✅ |
+| `/celulas` | `/admin/celulas` + `/(public)/celulas` | ✅ |
+| `/eventos` | `/admin/eventos` + `/(public)/eventos` | ✅ |
+| `/transmissoes` | embed em pregações | ✅ |
+| `/pregacoes` | `/admin/pregacoes` + `/membro/pregacoes` | ✅ |
+| `/categorias-series` | `/admin/pregacoes` (filtros) | ✅ |
+| `/planos-leitura` | model + `/membro/biblia` | ✅ |
+| `/downloads` | `/(public)/downloads` + admin via /admin/loja | ✅ |
+| `/banners` | seed + admin (futuro UI dedicada) | ⚠️ falta UI admin dedicada |
+| `/noticias` | via Banner / PaginaMultiuso | ⚠️ revisar |
+| `/comunicacao` | `/admin/push` + `/admin/mensagens` | ✅ |
+| `/sentimentos` | `/admin/intercessao` | ✅ |
+| `/pedidos-oracao` | `/admin/intercessao` + `/admin/intercessao/escala` | ✅ |
+| `/testemunhos` | `/admin/testemunhos` + `/(public)/testemunhos` | ✅ |
+| `/historico` | `/admin/membros/[id]/historico` | ✅ |
+| `/trilhas-equipes` | `/admin/jornadas` | ✅ |
+| `/financeiro` | `/admin/financeiro` + dre + fluxo-caixa + ofx | ✅ |
+| `/igrejas` | `/admin/config` (lista) | ✅ |
+| `/feature-flags` | `/admin/config` (catálogo 26 flags) | ✅ |
+| `/auditoria` | model AuditLog (sem UI dedicada) | ⚠️ falta UI |
+| `/insights` | sem equivalente direto (hardcoded) | ❌ não migrado (não-crítico) |
+| `/mapa-inchurch` | não relevante (doc migração) | n/a |
+| `/origem-inchurch` | não relevante (doc) | n/a |
+| `/modulos` | sidebar admin nativo | ✅ |
+| `/exportar` | `/admin/financeiro/exportar` | ✅ |
+
+**Resultado:** 25/27 rotas operacionais migradas. 2 com UI admin pendente (Banners dedicado, AuditLog dedicado). 3 não relevantes pra paridade (insights hardcoded, mapa e origem InChurch eram docs internas).
+
+**Recomendação cutover:** após F21 (comunicar membros) + F22 (treinar 42 admins) + F23 (cancelar contrato), `inchurch-dashboard` pode ser arquivado. Mantém-se o backup ETL como histórico imutável da paridade.
+
 ## Comandos de rollback
 
 Restaurar Maranata App a partir do backup desta sessão:

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
-import { Field, Input, Select, Textarea, Button } from "@/components/ui/field";
+import { Field, Input, Select, Button } from "@/components/ui/field";
 import { dataPtBR } from "@/lib/utils";
 import {
   matricularAluno,

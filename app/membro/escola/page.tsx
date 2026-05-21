@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { GraduationCap, BookOpen } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 
 export const metadata = { title: "Escola Bíblica" };
 export const dynamic = "force-dynamic";

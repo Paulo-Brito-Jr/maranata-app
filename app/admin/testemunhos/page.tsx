@@ -18,10 +18,6 @@ type SearchParams = {
   aba?: "pendentes" | "publicados" | "destaque" | "legado";
 };
 
-// Testemunhos do InChurch: vieram só com título "Testemunho de <unidade>"
-// e autor. Texto real nunca foi capturado. NÃO são moderáveis.
-const LEGADO_PLACEHOLDER_PATTERN = "Testemunho de %";
-
 export default async function AdminTestemunhos({
   searchParams,
 }: {
