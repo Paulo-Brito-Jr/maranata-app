@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MaranataLogo } from "@/components/maranata-logo";
 import { getCurrentUser, getDefaultRedirectForUser, rolesPodemAdministrar } from "@/lib/auth";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="size-7 rounded-full bg-gradient-to-br from-brand-orange to-brand-blue" />
+            <MaranataLogo size={32} />
             <span className="font-semibold">Maranata</span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">

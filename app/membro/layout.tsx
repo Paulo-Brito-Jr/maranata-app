@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { MembroBottomNav } from "@/components/membro-bottom-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MaranataLogo } from "@/components/maranata-logo";
 
 export default async function MembroLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -11,7 +12,7 @@ export default async function MembroLayout({ children }: { children: React.React
     <div className="mx-auto flex min-h-screen max-w-md flex-col">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/80 px-5 py-3 backdrop-blur">
         <div className="flex items-center gap-2">
-          <div className="size-7 rounded-full bg-gradient-to-br from-brand-orange to-brand-blue" />
+          <MaranataLogo size={28} />
           <span className="font-semibold">Maranata</span>
         </div>
         <div className="flex items-center gap-2">
