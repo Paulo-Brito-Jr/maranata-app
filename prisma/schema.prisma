@@ -63,6 +63,7 @@ model Igreja {
   categoriasEvento    CategoriaEvento[]
   categoriasPregacao  CategoriaPregacao[]
   seriesPregacao      SeriePregacao[]
+  locaisEvento        LocalEvento[]
 
   @@index([regionalId])
 }
@@ -427,7 +428,7 @@ model CategoriaEvento {
 model Evento {
   id              String           @id @default(cuid())
   inchurchId      Int?             @unique
-  igrejaId        String
+  igrejaId        String           // Igreja organizadora
   igreja          Igreja           @relation(fields: [igrejaId], references: [id])
   categoriaId     String?
   categoria       CategoriaEvento? @relation(fields: [categoriaId], references: [id])
@@ -437,8 +438,11 @@ model Evento {
   capaUrl         String?
   inicio          DateTime
   fim             DateTime?
-  local           String?
-  endereco        String?
+  local           String?          // texto livre quando não há localEvento
+  endereco        String?          // texto livre quando não há localEvento
+  localEventoId   String?          // local físico (igreja diferente ou ext. tipo Acampamento)
+  localEvento     LocalEvento?     @relation(fields: [localEventoId], references: [id])
+  ehGeral         Boolean          @default(false) // evento da Sede pra todos os membros das 15 unidades
   recorrente      Boolean          @default(false)
   recorrenciaJson Json?            // RRULE simplificada
   inscricoesAbertas Boolean        @default(false)
@@ -456,6 +460,8 @@ model Evento {
   @@index([igrejaId])
   @@index([inicio])
   @@index([publicado])
+  @@index([ehGeral])
+  @@index([localEventoId])
 }
 
 model LoteEvento {
@@ -1870,4 +1876,37 @@ model PastorGeralMinisterio {
 
   @@unique([usuarioId, ministerio])
   @@index([ministerio])
+}
+
+// =============================================================================
+// LOCAL FÍSICO de evento (Acampamento Maranata, salões, igreja diferente da
+// organizadora). Separado de Igreja pra permitir lugares que não são unidades.
+// =============================================================================
+
+enum TipoLocalEvento {
+  IGREJA        // uma das 15 unidades (vincula igrejaId)
+  ACAMPAMENTO   // Acampamento Maranata (sítio)
+  EXTERNO       // salão alugado, parque, hotel
+}
+
+model LocalEvento {
+  id          String          @id @default(cuid())
+  nome        String          @unique // "Acampamento Maranata", "Salão Jubileu"
+  tipo        TipoLocalEvento
+  igrejaId    String?         // só preenchido quando tipo=IGREJA
+  igreja      Igreja?         @relation(fields: [igrejaId], references: [id])
+  endereco    String?
+  cidade      String?
+  estado      String?
+  cep         String?
+  capacidade  Int?
+  descricao   String?
+  fotoUrl     String?
+  ativo       Boolean         @default(true)
+  criadoEm    DateTime        @default(now())
+
+  eventos     Evento[]
+
+  @@index([tipo])
+  @@index([igrejaId])
 }

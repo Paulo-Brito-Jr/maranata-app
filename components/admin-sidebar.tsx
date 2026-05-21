@@ -47,6 +47,7 @@ const GRUPOS: Grupo[] = [
       { href: "/admin/membros", label: "Membros", icon: Users },
       { href: "/admin/usuarios-app", label: "Usuários do app", icon: Smartphone },
       { href: "/admin/usuarios", label: "Admins do painel", icon: UserCog },
+      { href: "/admin/pastores-gerais", label: "Pastores gerais", icon: ShieldCheck },
       { href: "/admin/atendimentos", label: "Atendimentos", icon: ClipboardList },
     ],
   },
