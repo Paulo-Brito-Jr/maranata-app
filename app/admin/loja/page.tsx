@@ -9,6 +9,7 @@ import {
   criarCategoriaAction,
   toggleCategoriaAtivaAction,
   excluirCategoriaAction,
+  vincularProdutoPregacaoAction,
 } from "./actions";
 
 export const metadata = { title: "Loja" };
@@ -34,24 +35,43 @@ export default async function LojaPage({
   const params = await searchParams;
   const aba = params.aba ?? "produtos";
 
-  const [produtos, categorias, pedidos, faturamento, totalAtivos] =
-    await Promise.all([
-      prisma.lojaProduto.findMany({
-        include: { categoria: { select: { nome: true } } },
-        orderBy: { criadoEm: "desc" },
-        take: 100,
-      }),
-      prisma.lojaCategoria.findMany({
-        include: { _count: { select: { produtos: true } } },
-        orderBy: { ordem: "asc" },
-      }),
-      prisma.lojaPedido.count(),
-      prisma.lojaPedido.aggregate({
-        _sum: { total: true },
-        where: { status: "PAGO" },
-      }),
-      prisma.lojaProduto.count({ where: { status: "ATIVO" } }),
-    ]);
+  const [
+    produtos,
+    categorias,
+    pedidos,
+    faturamento,
+    totalAtivos,
+    vinculados,
+    semVinculo,
+    pregacoes,
+  ] = await Promise.all([
+    prisma.lojaProduto.findMany({
+      include: {
+        categoria: { select: { nome: true } },
+        pregacao: { select: { id: true, titulo: true } },
+      },
+      orderBy: { criadoEm: "desc" },
+      take: 100,
+    }),
+    prisma.lojaCategoria.findMany({
+      include: { _count: { select: { produtos: true } } },
+      orderBy: { ordem: "asc" },
+    }),
+    prisma.lojaPedido.count(),
+    prisma.lojaPedido.aggregate({
+      _sum: { total: true },
+      where: { status: "PAGO" },
+    }),
+    prisma.lojaProduto.count({ where: { status: "ATIVO" } }),
+    prisma.lojaProduto.count({ where: { vinculadoPregacaoId: { not: null } } }),
+    prisma.lojaProduto.count({ where: { vinculadoPregacaoId: null } }),
+    prisma.pregacao.findMany({
+      where: { publicada: true },
+      orderBy: { data: "desc" },
+      select: { id: true, titulo: true, data: true, pregador: true },
+      take: 600,
+    }),
+  ]);
 
   return (
     <ModuloShell
@@ -136,11 +156,50 @@ export default async function LojaPage({
                   </Select>
                 </Field>
               )}
+              <Field
+                label="Vincular a pregação"
+                hint="Opcional — produto pode ser mostrado contextualmente."
+              >
+                <Select name="vinculadoPregacaoId" defaultValue="">
+                  <option value="">— nenhuma —</option>
+                  {pregacoes.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.titulo}
+                      {p.pregador ? ` — ${p.pregador}` : ""}
+                      {p.data
+                        ? ` (${new Date(p.data).toLocaleDateString("pt-BR")})`
+                        : ""}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
               <Field label="Descrição">
                 <Textarea name="descricao" rows={3} />
               </Field>
               <Button type="submit">Criar produto</Button>
             </form>
+          </section>
+
+          <section className="mb-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <p className="text-xs uppercase tracking-widest text-emerald-300">
+                Com pregação
+              </p>
+              <p className="mt-1 text-2xl font-bold">{vinculados}</p>
+              <p className="text-xs text-muted-foreground">
+                produto{vinculados === 1 ? "" : "s"} vinculado{vinculados === 1 ? "" : "s"}
+                a uma pregação
+              </p>
+            </div>
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+              <p className="text-xs uppercase tracking-widest text-amber-300">
+                Sem vínculo
+              </p>
+              <p className="mt-1 text-2xl font-bold">{semVinculo}</p>
+              <p className="text-xs text-muted-foreground">
+                produto{semVinculo === 1 ? "" : "s"} sem pregação relacionada
+              </p>
+            </div>
           </section>
 
           <section>
@@ -191,6 +250,32 @@ export default async function LojaPage({
                           {p.descricao}
                         </p>
                       )}
+                      {p.pregacao && (
+                        <p className="mt-2 text-xs text-emerald-300">
+                          🎬 Pregação: {p.pregacao.titulo}
+                        </p>
+                      )}
+                      <form
+                        action={vincularProdutoPregacaoAction.bind(null, p.id)}
+                        className="mt-2 flex gap-1"
+                      >
+                        <select
+                          name="pregacaoId"
+                          defaultValue={p.vinculadoPregacaoId ?? ""}
+                          className="flex-1 rounded-full border border-input bg-background px-2 py-1 text-[10px]"
+                        >
+                          <option value="">— sem vínculo —</option>
+                          {pregacoes.slice(0, 200).map((pr) => (
+                            <option key={pr.id} value={pr.id}>
+                              {pr.titulo.slice(0, 40)}
+                              {pr.titulo.length > 40 ? "…" : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <button className="rounded-full bg-secondary/60 px-2 py-1 text-[10px] hover:bg-secondary">
+                          Salvar
+                        </button>
+                      </form>
                       <div className="mt-3 flex flex-wrap gap-1 text-xs">
                         {p.status !== "ATIVO" && (
                           <form

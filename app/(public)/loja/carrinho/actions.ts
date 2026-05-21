@@ -3,8 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { lerCarrinho, salvarCarrinho, limparCarrinho } from "@/lib/carrinho";
+import { lerCarrinho, salvarCarrinho } from "@/lib/carrinho";
 import { Prisma } from "@prisma/client";
+
+const FRETE_FIXO = 15;
 
 export async function removerDoCarrinho(produtoId: string): Promise<void> {
   const carrinho = await lerCarrinho();
@@ -19,6 +21,8 @@ export async function finalizarPedido(formData: FormData): Promise<void> {
   const telefone = String(formData.get("telefone") || "").trim() || null;
   const documento = String(formData.get("documento") || "").trim() || null;
   const endereco = String(formData.get("endereco") || "").trim() || null;
+  const cep = String(formData.get("cep") || "").trim() || null;
+  const cidadeUf = String(formData.get("cidadeUf") || "").trim() || null;
   if (!nome || !email) return;
 
   const itens = await lerCarrinho();
@@ -48,21 +52,28 @@ export async function finalizarPedido(formData: FormData): Promise<void> {
 
   if (itensCreate.length === 0) return;
 
+  const frete = FRETE_FIXO;
+  const total = subtotal + frete;
+
   const pedido = await prisma.lojaPedido.create({
     data: {
       nome,
       email,
       telefone,
       documento,
-      enderecoJson: endereco ? { endereco } : undefined,
+      enderecoJson:
+        endereco || cep || cidadeUf
+          ? { endereco, cep, cidadeUf }
+          : undefined,
       status: "AGUARDANDO_PAGAMENTO",
       subtotal,
-      total: subtotal,
+      frete,
+      total,
       itens: { create: itensCreate },
     },
     select: { id: true, numero: true },
   });
 
-  await limparCarrinho();
-  redirect(`/loja/pedido/${pedido.id}`);
+  // Redireciona pro endpoint que cria o checkout Safe2Pay e devolve checkoutUrl
+  redirect(`/api/loja/checkout?pedidoId=${pedido.id}`);
 }

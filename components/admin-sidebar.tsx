@@ -19,6 +19,11 @@ import {
   Settings,
   BookMarked,
   GraduationCap,
+  ClipboardList,
+  Languages,
+  MessageSquare,
+  FileText,
+  ListChecks,
 } from "lucide-react";
 
 const ITENS = [
@@ -36,6 +41,11 @@ const ITENS = [
   { href: "/admin/jornadas", label: "Jornadas", icon: Map },
   { href: "/admin/loja", label: "Loja", icon: ShoppingBag },
   { href: "/admin/push", label: "Comunicação", icon: Bell },
+  { href: "/admin/atendimentos", label: "Atendimentos", icon: ClipboardList },
+  { href: "/admin/nomenclatura", label: "Nomenclatura", icon: Languages },
+  { href: "/admin/mensagens", label: "Mensagens", icon: MessageSquare },
+  { href: "/admin/paginas", label: "Páginas multiuso", icon: FileText },
+  { href: "/admin/campos-customizados", label: "Campos custom", icon: ListChecks },
   { href: "/admin/config", label: "Configurações", icon: Settings },
 ];
 

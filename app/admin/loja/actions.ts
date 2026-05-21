@@ -26,6 +26,8 @@ export async function criarProdutoAction(formData: FormData) {
     (String(formData.get("status") || "RASCUNHO") as StatusProduto) ||
     "RASCUNHO";
   const slugInput = String(formData.get("slug") || "").trim();
+  const vinculadoPregacaoId =
+    String(formData.get("vinculadoPregacaoId") || "") || null;
   if (!nome || !(preco > 0)) return;
 
   const base = slugInput || slugify(nome);
@@ -45,7 +47,20 @@ export async function criarProdutoAction(formData: FormData) {
       estoque,
       categoriaId,
       status,
+      vinculadoPregacaoId,
     },
+  });
+  revalidatePath("/admin/loja");
+}
+
+export async function vincularProdutoPregacaoAction(
+  produtoId: string,
+  formData: FormData,
+) {
+  const pregacaoId = String(formData.get("pregacaoId") || "") || null;
+  await prisma.lojaProduto.update({
+    where: { id: produtoId },
+    data: { vinculadoPregacaoId: pregacaoId },
   });
   revalidatePath("/admin/loja");
 }

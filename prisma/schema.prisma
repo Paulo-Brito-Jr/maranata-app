@@ -110,6 +110,7 @@ model Usuario {
 
   membro          Membro?
   pushSubscriptions PushSubscription[]
+  atendimentos    AtendimentoPastoral[]
 
   @@index([papel])
 }
@@ -180,6 +181,8 @@ model Membro {
   ibmCursoMatriculas IbmMatriculaCurso[] @relation("IbmCursoMatricula")
   ibmTurmaMatriculas IbmMatricula[] @relation("IbmTurmaMatricula")
   ibmProfessor IbmProfessor?
+  atendimentos    AtendimentoPastoral[]
+  historico       HistoricoMembro[]
 
   @@index([igrejaId])
   @@index([status])
@@ -280,9 +283,12 @@ enum StatusCelula {
 
 model Rede {
   id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
   nome        String   @unique
   cor         String?
   supervisor  String?
+  igrejaId    String?
+  totalCelulas Int     @default(0)
   celulas     Celula[]
   criadaEm    DateTime @default(now())
 }
@@ -1595,4 +1601,100 @@ model IbmNota {
   lancadaPorId  String?
 
   @@unique([matriculaId, avaliacaoId])
+}
+
+// =============================================================================
+// FASE 3h — Atendimento pastoral + Campos custom + Subnomenclatura +
+// Mensagens/Páginas + Histórico de membro
+// =============================================================================
+
+model AtendimentoPastoral {
+  id        String   @id @default(cuid())
+  membroId  String
+  membro    Membro   @relation(fields: [membroId], references: [id])
+  pastorId  String
+  pastor    Usuario  @relation(fields: [pastorId], references: [id])
+  tipo      String   // visita, ligacao, oracao, aconselhamento, outro
+  resumo    String
+  detalhes  String?
+  proximaAcao String?
+  realizadoEm DateTime @default(now())
+  criadoEm  DateTime @default(now())
+
+  @@index([membroId, realizadoEm])
+  @@index([pastorId])
+}
+
+model CampoCustomizado {
+  id          String   @id @default(cuid())
+  inchurchId  Int?     @unique
+  chave       String   @unique
+  rotulo      String
+  tipo        String   // text, number, date, boolean, select
+  opcoesJson  Json?    // array de opções se tipo=select
+  obrigatorio Boolean  @default(false)
+  entidade    String   // "Membro", "Visitante", "Evento"
+  ordem       Int      @default(0)
+  ativo       Boolean  @default(true)
+  respostas   RespostaCampo[]
+  criadoEm    DateTime @default(now())
+}
+
+model RespostaCampo {
+  id        String   @id @default(cuid())
+  campoId   String
+  campo     CampoCustomizado @relation(fields: [campoId], references: [id])
+  entidadeId String   // ID do membro/visitante/evento
+  valor     String
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([campoId, entidadeId])
+  @@index([entidadeId])
+}
+
+model Subnomenclatura {
+  id        String   @id @default(cuid())
+  inchurchId Int?    @unique
+  chave     String   @unique  // ex: "material_apoio"
+  padrao    String   // valor padrão InChurch
+  customizado String // valor customizado Maranata
+  contexto  String?  // descrição de onde aparece
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model MensagemSistema {
+  id        String   @id @default(cuid())
+  chave     String   @unique
+  titulo    String
+  conteudo  String
+  ativa     Boolean  @default(true)
+  variaveisJson Json?
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model PaginaMultiuso {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  titulo    String
+  conteudo  String   // markdown
+  metaJson  Json?
+  publicada Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model HistoricoMembro {
+  id        String   @id @default(cuid())
+  membroId  String
+  membro    Membro   @relation(fields: [membroId], references: [id])
+  tipo      String   // mudanca_igreja, mudanca_status, batismo, transferencia, etc
+  diffJson  Json
+  observacao String?
+  registradoPorId String?
+  criadoEm  DateTime @default(now())
+
+  @@index([membroId, criadoEm])
 }

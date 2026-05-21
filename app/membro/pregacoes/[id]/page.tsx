@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { dataPtBR } from "@/lib/utils";
-import { Heart, Share2, ArrowLeft } from "lucide-react";
+import { Share2, ArrowLeft } from "lucide-react";
 import { FavoritarBotao } from "./favoritar-botao";
 import { ProgressoTracker } from "./progresso-tracker";
 import { ComentarioForm } from "./comentario-form";
@@ -90,7 +90,8 @@ export default async function PregacaoDetalhe({
       {pregacao.youtubeId && (
         <div className="relative -mx-5 aspect-video overflow-hidden bg-black">
           <iframe
-            src={`https://www.youtube.com/embed/${pregacao.youtubeId}?rel=0&modestbranding=1`}
+            id={`yt-player-${id}`}
+            src={`https://www.youtube.com/embed/${pregacao.youtubeId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent("https://maranata.app")}`}
             title={pregacao.titulo}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -109,6 +110,7 @@ export default async function PregacaoDetalhe({
           className="rounded-xl"
         />
       )}
+
 
       <header>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -156,12 +158,13 @@ export default async function PregacaoDetalhe({
         </section>
       )}
 
-      {membro && pregacao.duracaoSeg && (
+      {membro && (pregacao.duracaoSeg || pregacao.youtubeId) && (
         <ProgressoTracker
           pregacaoId={id}
           posicaoInicial={progresso?.posicaoSeg ?? 0}
-          duracaoSeg={pregacao.duracaoSeg}
+          duracaoSeg={pregacao.duracaoSeg ?? 0}
           concluido={progresso?.concluido ?? false}
+          youtubeId={pregacao.youtubeId}
         />
       )}
 

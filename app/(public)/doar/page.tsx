@@ -74,14 +74,20 @@ export default async function DoarPage({
           />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
             <input type="radio" name="frequencia" value="AVULSA" defaultChecked className="sr-only" />
             <span>Uma vez</span>
           </label>
           <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
             <input type="radio" name="frequencia" value="MENSAL" className="sr-only" />
-            <span>Dízimo mensal</span>
+            <span>Mensal</span>
+            <span className="block text-[10px] uppercase tracking-widest text-muted-foreground">dízimo</span>
+          </label>
+          <label className="cursor-pointer rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center has-[input:checked]:border-primary has-[input:checked]:bg-primary/10">
+            <input type="radio" name="frequencia" value="ANUAL" className="sr-only" />
+            <span>Anual</span>
+            <span className="block text-[10px] uppercase tracking-widest text-muted-foreground">votos</span>
           </label>
         </div>
 
