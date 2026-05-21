@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { MaranataLogo } from "@/components/maranata-logo";
 import {
   LayoutDashboard,
   Users,
@@ -28,6 +29,7 @@ import {
   ShieldCheck,
   HandHeart,
   ChevronRight,
+  UserCog,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +43,7 @@ const GRUPOS: Grupo[] = [
     titulo: "Pessoas",
     itens: [
       { href: "/admin/membros", label: "Membros", icon: Users },
+      { href: "/admin/usuarios", label: "Usuários (admins)", icon: UserCog },
       { href: "/admin/atendimentos", label: "Atendimentos", icon: ClipboardList },
     ],
   },
@@ -134,9 +137,9 @@ export function AdminSidebar() {
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-border bg-card/40 backdrop-blur md:block">
-      <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-        <div className="size-7 rounded-full bg-gradient-to-br from-brand-orange to-brand-blue" />
+      <div className="flex h-16 items-center justify-between border-b border-border px-5">
         <span className="font-semibold">Maranata App</span>
+        <MaranataLogo size={28} />
       </div>
 
       <nav className="flex flex-col gap-1 p-3">
