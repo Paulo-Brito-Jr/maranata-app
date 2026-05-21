@@ -107,7 +107,7 @@ async function main() {
 
   let atualizados = 0;
   let semMatch = 0;
-  let ambiguo = 0;
+  const ambiguo = 0;
   let semIgrejaUpstream = 0;
   let igualSede = 0;
 
