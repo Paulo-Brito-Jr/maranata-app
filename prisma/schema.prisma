@@ -53,6 +53,7 @@ model Igreja {
   kidsTurmas          KidsTurma[]
   lojaPedidos         LojaPedido[]
   ebdClasses          EbdClasse[]
+  doadores            Doador[]
 
   @@index([regionalId])
 }
@@ -183,6 +184,7 @@ model Membro {
   ibmProfessor IbmProfessor?
   atendimentos    AtendimentoPastoral[]
   historico       HistoricoMembro[]
+  doadores        Doador[]
 
   @@index([igrejaId])
   @@index([status])
@@ -995,6 +997,43 @@ enum FrequenciaDoacao {
   AVULSA
   MENSAL
   ANUAL
+}
+
+// Doador / Fornecedor importado do InChurch entry_source.
+// Mantém dados ricos de contato + bancários históricos pra contexto pastoral.
+model Doador {
+  id            String   @id @default(cuid())
+  inchurchId    Int?     @unique
+  igrejaId      String?
+  igreja        Igreja?  @relation(fields: [igrejaId], references: [id])
+  membroId      String?
+  membro        Membro?  @relation(fields: [membroId], references: [id])
+
+  nome          String
+  documento     String?  // CPF ou CNPJ
+  email         String?
+  telefone      String?
+  hasWhatsapp   Boolean  @default(false)
+  personType    String?  // natural_person / legal_person
+  nationality   String?
+
+  // Dados bancários históricos (pra recibos)
+  banco         String?
+  agencia       String?
+  conta         String?
+  pixKey        String?
+
+  // Flags InChurch
+  isPayer       Boolean  @default(true)
+  isSupplier    Boolean  @default(false)
+
+  observacoes   String?
+
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  @@index([igrejaId])
+  @@index([documento])
 }
 
 model Doacao {

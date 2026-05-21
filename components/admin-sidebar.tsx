@@ -26,6 +26,7 @@ import {
   ListChecks,
   ImageIcon,
   ShieldCheck,
+  HandHeart,
 } from "lucide-react";
 
 const ITENS = [
@@ -49,6 +50,7 @@ const ITENS = [
   { href: "/admin/paginas", label: "Páginas multiuso", icon: FileText },
   { href: "/admin/campos-customizados", label: "Campos custom", icon: ListChecks },
   { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+  { href: "/admin/doadores", label: "Doadores", icon: HandHeart },
   { href: "/admin/audit", label: "Auditoria", icon: ShieldCheck },
   { href: "/admin/config", label: "Configurações", icon: Settings },
 ];
