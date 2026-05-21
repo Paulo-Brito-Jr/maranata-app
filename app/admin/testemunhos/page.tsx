@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { dataPtBR } from "@/lib/utils";
 import { ModuloShell } from "@/components/modulo-shell";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   publicarTestemunhoAction,
   ocultarTestemunhoAction,
@@ -26,19 +27,25 @@ export default async function AdminTestemunhos({
   const params = await searchParams;
   const aba = params.aba ?? "pendentes";
 
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  const igrejaWhere: Prisma.TestemunhoWhereInput = filtroIgreja.igrejaId
+    ? { membro: { igrejaId: filtroIgreja.igrejaId } }
+    : {};
+
   let where: Prisma.TestemunhoWhereInput = {};
 
   if (aba === "legado") {
-    where = { texto: { startsWith: "Testemunho de " } };
+    where = { texto: { startsWith: "Testemunho de " }, ...igrejaWhere };
   } else {
     // Pra abas reais, EXCLUIR placeholders do legado
     const semPlaceholder = { NOT: { texto: { startsWith: "Testemunho de " } } };
     if (aba === "publicados") {
-      where = { AND: [semPlaceholder, { publicado: true }] };
+      where = { AND: [semPlaceholder, { publicado: true }, igrejaWhere] };
     } else if (aba === "destaque") {
-      where = { AND: [semPlaceholder, { destaque: true }] };
+      where = { AND: [semPlaceholder, { destaque: true }, igrejaWhere] };
     } else {
-      where = { AND: [semPlaceholder, { publicado: false }] };
+      where = { AND: [semPlaceholder, { publicado: false }, igrejaWhere] };
     }
   }
 

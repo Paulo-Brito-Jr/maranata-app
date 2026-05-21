@@ -12,6 +12,8 @@ export async function criarPregacao(formData: FormData) {
   const youtubeId = String(formData.get("youtubeId") || "").trim() || null;
   const categoriaId = String(formData.get("categoriaId") || "").trim() || null;
   const descricao = String(formData.get("descricao") || "").trim() || null;
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
 
   if (!titulo) return;
 
@@ -23,6 +25,7 @@ export async function criarPregacao(formData: FormData) {
       youtubeId,
       categoriaId,
       descricao,
+      igrejaId,
     },
   });
   revalidatePath("/admin/pregacoes");

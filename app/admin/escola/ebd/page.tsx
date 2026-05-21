@@ -2,10 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input, Select, Textarea, Button } from "@/components/ui/field";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import { criarClasseEbd } from "./actions";
 import { dataPtBR } from "@/lib/utils";
 
-export const metadata = { title: "Classes EBD" };
+export const metadata = { title: "EBD — Escola Bíblica Dominical" };
 export const dynamic = "force-dynamic";
 
 function cicloPadrao(): string {
@@ -16,26 +17,35 @@ function cicloPadrao(): string {
 }
 
 export default async function EbdClassesPage() {
+  // EBD existe em todas as 15 unidades (igrejaId required).
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+
   const [classes, igrejas] = await Promise.all([
     prisma.ebdClasse.findMany({
+      where: filtroIgreja,
       include: {
-        igreja: { select: { nome: true } },
+        igreja: { select: { nome: true, apelido: true } },
         _count: { select: { inscricoes: { where: { status: "ATIVA" } }, aulas: true } },
       },
       orderBy: [{ ativa: "desc" }, { ciclo: "desc" }, { nome: "asc" }],
     }),
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.igreja.findMany({
+      where: { ativa: true },
+      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      select: { id: true, nome: true, apelido: true },
+    }),
   ]);
 
   return (
     <ModuloShell
-      titulo="Classes EBD"
-      descricao="Cada aluno se inscreve em 1 classe por ciclo trimestral. Sem notas formais — só presença."
+      titulo="EBD — Escola Bíblica Dominical"
+      descricao="Existe em todas as 15 unidades. Cada aluno se inscreve em 1 classe por ciclo trimestral. Sem notas formais — só presença."
       stats={[
         { label: "Classes ativas", valor: classes.filter((c) => c.ativa).length },
         { label: "Total inscritos", valor: classes.reduce((a, c) => a + c._count.inscricoes, 0) },
+        { label: "Igrejas representadas", valor: new Set(classes.map((c) => c.igrejaId)).size, ref: `de ${igrejas.length}` },
       ]}
-      acoes={[{ href: "/admin/escola", label: "← Hub" }]}
     >
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="mb-3 font-semibold">Nova classe</h2>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   enviarPushAgoraAction,
   excluirPushAction,
@@ -12,6 +13,13 @@ export const metadata = { title: "Comunicação" };
 export const dynamic = "force-dynamic";
 
 export default async function PushPage() {
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // Push: NULL=global (todas igrejas) sempre aparece; locais filtram
+  const pushWhere = filtroIgreja.igrejaId
+    ? { OR: [{ igrejaId: null }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
+
   const [
     pushes,
     totalAssinantes,
@@ -21,12 +29,13 @@ export default async function PushPage() {
     templates,
   ] = await Promise.all([
     prisma.pushNotification.findMany({
+      where: pushWhere,
       orderBy: { criadoEm: "desc" },
       take: 30,
       include: { template: { select: { nome: true } } },
     }),
     prisma.pushSubscription.count({ where: { ativa: true } }),
-    prisma.usuarioApp.count(),
+    prisma.usuarioApp.count({ where: filtroIgreja }),
     prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
     prisma.celula.findMany({
       select: { id: true, nome: true },

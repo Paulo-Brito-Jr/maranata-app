@@ -11,9 +11,11 @@ export async function criarCurso(formData: FormData): Promise<void> {
   const cargaHoraria = Number(formData.get("cargaHoraria") || 2400);
   const duracaoSemestres = Number(formData.get("duracaoSemestres") || 8);
   const descricao = String(formData.get("descricao") || "").trim() || null;
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
   if (!nome) return;
   const c = await prisma.ibmCurso.create({
-    data: { nome, cargaHoraria, duracaoSemestres, descricao },
+    data: { nome, cargaHoraria, duracaoSemestres, descricao, igrejaId },
   });
   revalidatePath("/admin/escola/ibm/cursos");
   redirect(`/admin/escola/ibm/cursos/${c.id}`);

@@ -7,6 +7,8 @@ export async function criarTrilhaAction(formData: FormData) {
   const titulo = String(formData.get("titulo") || "").trim();
   const descricao = String(formData.get("descricao") || "").trim() || null;
   const obrigatoria = formData.get("obrigatoria") === "on";
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
   if (!titulo) return;
 
   const max = await prisma.trilha.aggregate({ _max: { ordem: true } });
@@ -15,6 +17,7 @@ export async function criarTrilhaAction(formData: FormData) {
       titulo,
       descricao,
       obrigatoria,
+      igrejaId,
       ordem: (max._max.ordem ?? 0) + 1,
     },
   });

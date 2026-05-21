@@ -3,6 +3,7 @@ import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
 import { Field, Input, Select, Textarea, Button } from "@/components/ui/field";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   criarAtendimentoAction,
   excluirAtendimentoAction,
@@ -20,8 +21,16 @@ const TIPOS = [
 ];
 
 export default async function AtendimentosPage() {
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // AtendimentoPastoral filtra via membro.igrejaId
+  const atendIgreja = filtroIgreja.igrejaId
+    ? { membro: { igrejaId: filtroIgreja.igrejaId } }
+    : {};
+
   const [atendimentos, total, membros, pastores] = await Promise.all([
     prisma.atendimentoPastoral.findMany({
+      where: atendIgreja,
       orderBy: { realizadoEm: "desc" },
       take: 50,
       include: {
@@ -29,8 +38,9 @@ export default async function AtendimentosPage() {
         pastor: { select: { id: true, nome: true } },
       },
     }),
-    prisma.atendimentoPastoral.count(),
+    prisma.atendimentoPastoral.count({ where: atendIgreja }),
     prisma.membro.findMany({
+      where: filtroIgreja,
       select: { id: true, nome: true },
       orderBy: { nome: "asc" },
       take: 500,

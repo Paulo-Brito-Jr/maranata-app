@@ -6,7 +6,14 @@ import { criarPregacao } from "../actions";
 export const metadata = { title: "Nova pregação" };
 
 export default async function NovaPregacaoPage() {
-  const categorias = await prisma.categoriaPregacao.findMany({ orderBy: { nome: "asc" } });
+  const [categorias, igrejas] = await Promise.all([
+    prisma.categoriaPregacao.findMany({ orderBy: { nome: "asc" } }),
+    prisma.igreja.findMany({
+      where: { ativa: true },
+      orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+      select: { id: true, nome: true, apelido: true },
+    }),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -45,6 +52,19 @@ export default async function NovaPregacaoPage() {
         </div>
         <Field label="Descrição">
           <Textarea name="descricao" rows={3} />
+        </Field>
+        <Field
+          label="Escopo"
+          hint="Geral = aparece pra todas as 15 unidades. Local = só pra membros daquela unidade."
+        >
+          <Select name="igrejaId" defaultValue="GERAL">
+            <option value="GERAL">🌐 Geral (todas as 15 unidades)</option>
+            {igrejas.map((ig) => (
+              <option key={ig.id} value={ig.id}>
+                📍 Local — {ig.apelido ?? ig.nome}
+              </option>
+            ))}
+          </Select>
         </Field>
         <Button type="submit">Criar pregação</Button>
       </form>

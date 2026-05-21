@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
-import { Field, Input, Textarea, Button } from "@/components/ui/field";
+import { Field, Input, Textarea, Button, Select } from "@/components/ui/field";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   criarTrilhaAction,
   toggleTrilhaAtivaAction,
@@ -11,14 +12,30 @@ export const metadata = { title: "Jornadas" };
 export const dynamic = "force-dynamic";
 
 export default async function JornadasPage() {
-  const [trilhas, totalPessoas] = await Promise.all([
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // Trilhas gerais (igrejaId null) sempre aparecem; locais filtram.
+  const trilhaWhere = filtroIgreja.igrejaId
+    ? { OR: [{ igrejaId: null }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
+
+  const [trilhas, totalPessoas, igrejas] = await Promise.all([
     prisma.trilha.findMany({
+      where: trilhaWhere,
       include: {
+        igreja: { select: { nome: true, apelido: true } },
         _count: { select: { pessoas: true, etapas: true } },
       },
-      orderBy: { ordem: "asc" },
+      orderBy: [{ igrejaId: "asc" }, { ordem: "asc" }],
     }),
     prisma.pessoaJornada.count(),
+    ctx.tipo === "todas" || ctx.tipo === "selecionada"
+      ? prisma.igreja.findMany({
+          where: { ativa: true },
+          orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+          select: { id: true, nome: true, apelido: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -60,6 +77,21 @@ export default async function JornadasPage() {
               placeholder="Trilha pra quem acabou de chegar..."
             />
           </Field>
+          {igrejas.length > 0 && (
+            <Field
+              label="Escopo"
+              hint="Geral = disponível pra todas as unidades. Local = só pra aquela unidade."
+            >
+              <Select name="igrejaId" defaultValue="GERAL">
+                <option value="GERAL">🌐 Geral (todas as 15 unidades)</option>
+                {igrejas.map((ig) => (
+                  <option key={ig.id} value={ig.id}>
+                    📍 Local — {ig.apelido ?? ig.nome}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="obrigatoria" /> Trilha obrigatória pra
             novos convertidos
@@ -86,6 +118,15 @@ export default async function JornadasPage() {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold">{t.titulo}</h3>
                   <div className="flex gap-1">
+                    {t.igreja ? (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-300">
+                        📍 {t.igreja.apelido ?? t.igreja.nome}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">
+                        🌐 Geral
+                      </span>
+                    )}
                     {t.obrigatoria && (
                       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
                         Obrigatória

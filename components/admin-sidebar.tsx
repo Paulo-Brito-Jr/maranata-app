@@ -72,7 +72,8 @@ const GRUPOS: Grupo[] = [
   {
     titulo: "Escola Bíblica",
     itens: [
-      { href: "/admin/escola", label: "EBD & IBM", icon: GraduationCap },
+      { href: "/admin/escola/ebd", label: "EBD (todas as unidades)", icon: GraduationCap },
+      { href: "/admin/escola/ibm", label: "IBM (Seminário)", icon: BookMarked },
     ],
   },
   {

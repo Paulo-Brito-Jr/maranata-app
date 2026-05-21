@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Turmas IBM" };
 export const dynamic = "force-dynamic";
@@ -8,10 +9,18 @@ export const dynamic = "force-dynamic";
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default async function TurmasPage() {
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  const turmaWhere = filtroIgreja.igrejaId
+    ? { OR: [{ igrejaId: null }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
+
   const turmas = await prisma.ibmTurma.findMany({
+    where: turmaWhere,
     include: {
       disciplina: { include: { curso: { select: { nome: true } } } },
       professor: { select: { nome: true } },
+      igreja: { select: { nome: true, apelido: true } },
       _count: { select: { matriculas: true } },
     },
     orderBy: [{ semestre: "desc" }, { disciplina: { codigo: "asc" } }],
@@ -61,9 +70,20 @@ export default async function TurmasPage() {
                       {t.disciplina.curso.nome} · {DIAS[t.diaSemana]} {t.horario}
                       {t.sala && ` · ${t.sala}`}
                     </p>
-                    <p className="mt-2 text-xs">
-                      {t._count.matriculas}/{t.vagas} alunos
-                      {t.professor && ` · Prof. ${t.professor.nome}`}
+                    <p className="mt-2 flex items-center gap-2 text-xs">
+                      <span>
+                        {t._count.matriculas}/{t.vagas} alunos
+                        {t.professor && ` · Prof. ${t.professor.nome}`}
+                      </span>
+                      {t.igreja ? (
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] text-amber-700 dark:text-amber-300">
+                          📍 {t.igreja.apelido ?? t.igreja.nome}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] text-blue-700 dark:text-blue-300">
+                          🌐 Geral
+                        </span>
+                      )}
                     </p>
                   </Link>
                 </li>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   atualizarStatusPedido,
   publicarTestemunho,
@@ -28,6 +29,16 @@ export default async function IntercessaoPage({
   const params = await searchParams;
   const filtro = params.filtro ?? "todos";
 
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // PedidoOracao filtra via membro.igrejaId (modelo não tem campo direto)
+  const pedidoIgrejaWhere = filtroIgreja.igrejaId
+    ? { membro: { igrejaId: filtroIgreja.igrejaId } }
+    : {};
+  const testemIgrejaWhere = filtroIgreja.igrejaId
+    ? { membro: { igrejaId: filtroIgreja.igrejaId } }
+    : {};
+
   const [
     contagens,
     antigosNaoRespondidos,
@@ -37,16 +48,17 @@ export default async function IntercessaoPage({
     testemunhos,
   ] = await Promise.all([
     Promise.all([
-      prisma.pedidoOracao.count({ where: { status: "ABERTO" } }),
-      prisma.pedidoOracao.count({ where: { status: "EM_ORACAO" } }),
-      prisma.pedidoOracao.count({ where: { status: "RESPONDIDO" } }),
-      prisma.pedidoOracao.count({ where: { status: "ARQUIVADO" } }),
-      prisma.testemunho.count({ where: { publicado: true } }),
+      prisma.pedidoOracao.count({ where: { status: "ABERTO", ...pedidoIgrejaWhere } }),
+      prisma.pedidoOracao.count({ where: { status: "EM_ORACAO", ...pedidoIgrejaWhere } }),
+      prisma.pedidoOracao.count({ where: { status: "RESPONDIDO", ...pedidoIgrejaWhere } }),
+      prisma.pedidoOracao.count({ where: { status: "ARQUIVADO", ...pedidoIgrejaWhere } }),
+      prisma.testemunho.count({ where: { publicado: true, ...testemIgrejaWhere } }),
     ]),
     // 20 mais antigos não respondidos (ABERTO ou EM_ORACAO)
     prisma.pedidoOracao.findMany({
       where: {
         status: { in: ["ABERTO", "EM_ORACAO"] },
+        ...pedidoIgrejaWhere,
       },
       include: {
         sentimento: { select: { nome: true, emoji: true } },
@@ -57,6 +69,7 @@ export default async function IntercessaoPage({
     }),
     // 30 mais recentes (todos os status)
     prisma.pedidoOracao.findMany({
+      where: pedidoIgrejaWhere,
       include: {
         sentimento: { select: { nome: true, emoji: true } },
         membro: { select: { nome: true } },
@@ -67,7 +80,7 @@ export default async function IntercessaoPage({
     }),
     // Pedidos abertos sem intercessor
     prisma.pedidoOracao.findMany({
-      where: { status: "ABERTO", intercessorId: null },
+      where: { status: "ABERTO", intercessorId: null, ...pedidoIgrejaWhere },
       include: {
         sentimento: { select: { nome: true, emoji: true } },
         membro: { select: { nome: true } },
@@ -82,6 +95,7 @@ export default async function IntercessaoPage({
       distinct: ["intercessorId"],
     }),
     prisma.testemunho.findMany({
+      where: testemIgrejaWhere,
       include: { membro: { select: { nome: true } } },
       orderBy: { criadoEm: "desc" },
       take: 15,

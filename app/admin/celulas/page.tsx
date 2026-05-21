@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Células" };
 export const dynamic = "force-dynamic";
@@ -9,8 +10,12 @@ export const dynamic = "force-dynamic";
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default async function CelulasPage() {
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+
   const [celulas, totalParticipantes, totalRedes, totalVisitantes] = await Promise.all([
     prisma.celula.findMany({
+      where: filtroIgreja,
       include: {
         igreja: { select: { nome: true } },
         rede: { select: { nome: true, cor: true } },
@@ -18,9 +23,16 @@ export default async function CelulasPage() {
       },
       orderBy: [{ status: "asc" }, { nome: "asc" }],
     }),
-    prisma.participanteCelula.count({ where: { ativo: true } }),
+    prisma.participanteCelula.count({
+      where: {
+        ativo: true,
+        ...(filtroIgreja.igrejaId ? { celula: { igrejaId: filtroIgreja.igrejaId } } : {}),
+      },
+    }),
     prisma.rede.count(),
-    prisma.visitanteCelula.count(),
+    prisma.visitanteCelula.count({
+      where: filtroIgreja.igrejaId ? { celula: { igrejaId: filtroIgreja.igrejaId } } : {},
+    }),
   ]);
 
   const ativas = celulas.filter((c) => c.status === "ATIVA").length;

@@ -5,13 +5,23 @@ import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
 import { dataPtBR } from "@/lib/utils";
 import { Heart, MessageCircle, PlayCircle } from "lucide-react";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Pregações" };
 export const dynamic = "force-dynamic";
 
 export default async function PregacoesPage() {
+  // Pastor geral de LOUVOR também pode ver pregações de todas as unidades.
+  const ctx = await getIgrejaContexto({ ministerioPagina: "LOUVOR" });
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // Pregação pode ter igrejaId null (pregação geral) — quando filtra, OR null
+  const pregacaoIgreja = filtroIgreja.igrejaId
+    ? { OR: [{ igrejaId: null }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
+
   const [pregacoes, totalSeries, , totalBanners, agg, top10] = await Promise.all([
     prisma.pregacao.findMany({
+      where: pregacaoIgreja,
       include: {
         categoria: { select: { nome: true } },
         serie: { select: { titulo: true } },
@@ -20,15 +30,16 @@ export default async function PregacoesPage() {
       orderBy: [{ data: "desc" }, { criadaEm: "desc" }],
       take: 50,
     }),
-    prisma.seriePregacao.count(),
+    prisma.seriePregacao.count({ where: pregacaoIgreja }),
     prisma.transmissao.count(),
     prisma.banner.count({ where: { ativo: true } }),
     prisma.pregacao.aggregate({
+      where: pregacaoIgreja,
       _sum: { execucoes: true },
       _count: { id: true },
     }),
     prisma.pregacao.findMany({
-      where: { execucoes: { gt: 0 } },
+      where: { execucoes: { gt: 0 }, ...pregacaoIgreja },
       orderBy: { execucoes: "desc" },
       take: 10,
       select: {
