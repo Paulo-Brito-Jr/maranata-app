@@ -17,6 +17,7 @@ import {
   Map,
   ShoppingBag,
   Bell,
+  Banknote,
   Settings,
   BookMarked,
   GraduationCap,
@@ -84,6 +85,7 @@ const GRUPOS: Grupo[] = [
     itens: [
       { href: "/admin/financeiro", label: "Financeiro", icon: HandCoins },
       { href: "/admin/doadores", label: "Doadores", icon: HandHeart },
+      { href: "/admin/pagamentos-locais", label: "Pagamentos em dinheiro", icon: Banknote },
     ],
   },
   {
