@@ -30,6 +30,7 @@ import {
   HandHeart,
   ChevronRight,
   UserCog,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,7 +44,8 @@ const GRUPOS: Grupo[] = [
     titulo: "Pessoas",
     itens: [
       { href: "/admin/membros", label: "Membros", icon: Users },
-      { href: "/admin/usuarios", label: "Usuários (admins)", icon: UserCog },
+      { href: "/admin/usuarios-app", label: "Usuários do app", icon: Smartphone },
+      { href: "/admin/usuarios", label: "Admins do painel", icon: UserCog },
       { href: "/admin/atendimentos", label: "Atendimentos", icon: ClipboardList },
     ],
   },
