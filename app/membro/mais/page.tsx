@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, rolesPodemAdministrar } from "@/lib/auth";
+import { PushToggle } from "@/components/push-toggle";
 import {
   Heart,
   HandCoins,
@@ -13,6 +14,7 @@ import {
   BookMarked,
   Sparkles,
   GraduationCap,
+  BellRing,
 } from "lucide-react";
 
 export const metadata = { title: "Mais" };
@@ -68,6 +70,21 @@ export default async function MembroMais() {
           Tudo que a Maranata oferece pra você, num só lugar.
         </p>
       </header>
+
+      <section className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5 p-4">
+        <div className="flex items-start gap-3">
+          <BellRing className="size-6 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold">Ative as notificações</div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Receba lembrete de evento, devocional do dia e quando seu pedido de oração for respondido.
+            </p>
+            <div className="mt-3">
+              <PushToggle />
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="grid grid-cols-2 gap-3">
         {principais.map((item) => {

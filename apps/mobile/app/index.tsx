@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking2 from "expo-linking";
@@ -19,6 +20,7 @@ const SESSION_KEY = "maranata_session_token";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
+  const router = useRouter();
   const [logado, setLogado] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -26,9 +28,13 @@ export default function Index() {
   useEffect(() => {
     (async () => {
       const token = await SecureStore.getItemAsync(SESSION_KEY);
-      setLogado(!!token);
+      if (token) {
+        router.replace("/(tabs)");
+        return;
+      }
+      setLogado(false);
     })();
-  }, []);
+  }, [router]);
 
   async function login() {
     setBusy(true);
@@ -49,7 +55,7 @@ export default function Index() {
         return;
       }
       await SecureStore.setItemAsync(SESSION_KEY, token);
-      setLogado(true);
+      router.replace("/(tabs)");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha no login");
     } finally {
