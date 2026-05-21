@@ -131,6 +131,14 @@ export default async function CriancasPage() {
                 {c.responsaveis[0] && (
                   <p className="mt-1 text-xs">Resp.: {c.responsaveis[0].nome}</p>
                 )}
+                <div className="mt-2 text-right">
+                  <Link
+                    href={`/admin/kids/criancas/${c.id}/editar`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Editar
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

@@ -5,6 +5,43 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FaixaEtariaKids } from "@prisma/client";
 
+export async function atualizarCrianca(id: string, formData: FormData) {
+  const igrejaId = String(formData.get("igrejaId") || "");
+  const nome = String(formData.get("nome") || "").trim();
+  const dataNascimento = String(formData.get("dataNascimento") || "");
+  const faixaEtaria = String(formData.get("faixaEtaria") || "KIDS_1") as FaixaEtariaKids;
+  const alergias = String(formData.get("alergias") || "").trim() || null;
+  const restricoesAlim = String(formData.get("restricoesAlim") || "").trim() || null;
+  const autorizaImagem = formData.get("autorizaImagem") === "on";
+  const ativa = formData.get("ativa") === "on";
+  if (!igrejaId || !nome) return;
+  await prisma.kidsCrianca.update({
+    where: { id },
+    data: {
+      igrejaId,
+      nome,
+      dataNascimento: dataNascimento ? new Date(dataNascimento) : undefined,
+      faixaEtaria,
+      alergias,
+      restricoesAlim,
+      autorizaImagem,
+      ativa,
+    },
+  });
+  revalidatePath("/admin/kids/criancas");
+  revalidatePath("/admin/kids");
+}
+
+export async function excluirCrianca(id: string): Promise<void> {
+  const ativos = await prisma.kidsCheckin.count({ where: { criancaId: id, saidaEm: null } });
+  if (ativos > 0) throw new Error("Criança em check-in ativo — finalize antes de excluir");
+  await prisma.kidsCheckin.deleteMany({ where: { criancaId: id } });
+  await prisma.kidsResponsavel.deleteMany({ where: { criancaId: id } });
+  await prisma.kidsCrianca.delete({ where: { id } });
+  revalidatePath("/admin/kids/criancas");
+  revalidatePath("/admin/kids");
+}
+
 export async function criarCrianca(formData: FormData) {
   const igrejaId = String(formData.get("igrejaId") || "");
   const nome = String(formData.get("nome") || "").trim();

@@ -55,6 +55,7 @@ export default async function LancamentosPage() {
                 <th className="px-4 py-3 font-medium">Igreja</th>
                 <th className="px-4 py-3 font-medium">Categoria</th>
                 <th className="px-4 py-3 font-medium text-right">Valor</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -72,6 +73,14 @@ export default async function LancamentosPage() {
                     }`}
                   >
                     {l.tipo === "ENTRADA" ? "+" : "-"} {brl(Number(l.valor))}
+                  </td>
+                  <td className="px-4 py-3 text-right text-xs">
+                    <Link
+                      href={`/admin/financeiro/lancamentos/${l.id}/editar`}
+                      className="text-primary hover:underline"
+                    >
+                      editar
+                    </Link>
                   </td>
                 </tr>
               ))}

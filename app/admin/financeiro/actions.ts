@@ -44,6 +44,28 @@ export async function criarLancamento(formData: FormData) {
   redirect("/admin/financeiro/lancamentos");
 }
 
+export async function atualizarLancamento(id: string, formData: FormData) {
+  const raw = Object.fromEntries(formData);
+  const data = LancamentoInput.parse(raw);
+  await prisma.lancamentoFinanceiro.update({
+    where: { id },
+    data: {
+      igrejaId: data.igrejaId,
+      categoriaId: data.categoriaId || null,
+      contaId: data.contaId || null,
+      tipo: data.tipo,
+      status: data.status,
+      formaPagamento: (data.formaPagamento as FormaPagamento) || null,
+      valor: data.valor,
+      data: new Date(data.data),
+      descricao: data.descricao || null,
+    },
+  });
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/admin/financeiro/lancamentos");
+  redirect("/admin/financeiro/lancamentos");
+}
+
 export async function deletarLancamento(id: string) {
   await prisma.lancamentoFinanceiro.delete({ where: { id } });
   revalidatePath("/admin/financeiro");

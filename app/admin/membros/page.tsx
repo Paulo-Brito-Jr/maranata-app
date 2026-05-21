@@ -93,6 +93,7 @@ export default async function MembrosPage({
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Batismo</th>
                 <th className="px-4 py-3 font-medium">Contato</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -112,6 +113,14 @@ export default async function MembrosPage({
                   <td className="px-4 py-3 text-muted-foreground">{dataPtBR(m.dataBatismo)}</td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {m.email ?? m.telefone ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right text-xs">
+                    <Link
+                      href={`/admin/membros/${m.id}/editar`}
+                      className="text-primary hover:underline"
+                    >
+                      editar
+                    </Link>
                   </td>
                 </tr>
               ))}
