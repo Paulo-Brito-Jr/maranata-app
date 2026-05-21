@@ -36,29 +36,38 @@ export default async function AdminDevocional() {
       ) : (
         <div className="grid gap-3">
           {devs.map((d) => (
-            <Link
+            <div
               key={d.id}
-              href={`/admin/devocional/${d.id}`}
-              className="flex items-start justify-between rounded-2xl border border-border bg-card p-4 hover:border-primary/40"
+              className="rounded-2xl border border-border bg-card p-4 hover:border-primary/40"
             >
-              <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                  {dataPtBR(d.data)}
-                </p>
-                <h3 className="mt-1 font-semibold">{d.titulo}</h3>
-                <p className="mt-1 line-clamp-1 text-sm italic text-muted-foreground">
-                  «{d.versiculoTexto}» — {d.versiculoRef}
-                </p>
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                    {dataPtBR(d.data)}
+                  </p>
+                  <h3 className="mt-1 font-semibold">{d.titulo}</h3>
+                  <p className="mt-1 line-clamp-1 text-sm italic text-muted-foreground">
+                    «{d.versiculoTexto}» — {d.versiculoRef}
+                  </p>
+                </div>
+                <div className="ml-4 text-right text-xs">
+                  <span className="rounded-full bg-secondary/60 px-2 py-0.5">
+                    {d._count.reacoes} reações
+                  </span>
+                  {!d.publicado && (
+                    <p className="mt-1 text-amber-300">rascunho</p>
+                  )}
+                </div>
               </div>
-              <div className="ml-4 text-right text-xs">
-                <span className="rounded-full bg-secondary/60 px-2 py-0.5">
-                  {d._count.reacoes} reações
-                </span>
-                {!d.publicado && (
-                  <p className="mt-1 text-amber-300">rascunho</p>
-                )}
+              <div className="mt-2 flex justify-end gap-2 text-xs">
+                <Link
+                  href={`/admin/devocional/${d.id}/editar`}
+                  className="text-primary hover:underline"
+                >
+                  Editar
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

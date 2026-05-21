@@ -100,6 +100,38 @@ export async function togglePresenca(formData: FormData): Promise<void> {
   if (turmaId) revalidatePath(`/admin/escola/ibm/turmas/${turmaId}`);
 }
 
+export async function atualizarTurmaIbm(id: string, formData: FormData): Promise<void> {
+  await requireRole(...PROF_ROLES);
+  const semestre = String(formData.get("semestre") || "").trim();
+  const diaSemana = Number(formData.get("diaSemana") || 0);
+  const horario = String(formData.get("horario") || "").trim();
+  const sala = String(formData.get("sala") || "").trim() || null;
+  const vagas = Number(formData.get("vagas") || 40);
+  const professorId = String(formData.get("professorId") || "").trim() || null;
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
+  const status = String(formData.get("status") || "ABERTA").trim();
+
+  await prisma.ibmTurma.update({
+    where: { id },
+    data: { semestre, diaSemana, horario, sala, vagas, professorId, igrejaId, status },
+  });
+  revalidatePath(`/admin/escola/ibm/turmas/${id}`);
+  revalidatePath("/admin/escola/ibm/turmas");
+}
+
+export async function excluirTurmaIbm(id: string): Promise<void> {
+  await requireRole("SUPER_ADMIN", "PASTOR_DIRETORIA");
+  // cascade: notas → avaliações → presenças → aulas → matrículas → turma
+  await prisma.ibmNota.deleteMany({ where: { avaliacao: { turmaId: id } } });
+  await prisma.ibmAvaliacao.deleteMany({ where: { turmaId: id } });
+  await prisma.ibmPresenca.deleteMany({ where: { aula: { turmaId: id } } });
+  await prisma.ibmAula.deleteMany({ where: { turmaId: id } });
+  await prisma.ibmMatricula.deleteMany({ where: { turmaId: id } });
+  await prisma.ibmTurma.delete({ where: { id } });
+  revalidatePath("/admin/escola/ibm/turmas");
+}
+
 export async function encerrarTurma(formData: FormData): Promise<void> {
   await requireRole(...PROF_ROLES);
   const turmaId = String(formData.get("turmaId") || "");

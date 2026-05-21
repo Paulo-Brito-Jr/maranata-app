@@ -58,9 +58,10 @@ export default async function TurmasPage() {
             <ul className="grid gap-2 md:grid-cols-2">
               {porSemestre.get(sem)!.map((t) => (
                 <li key={t.id}>
+                  <div className="rounded-2xl border border-border bg-card p-4 text-sm hover:border-primary/40">
                   <Link
                     href={`/admin/escola/ibm/turmas/${t.id}`}
-                    className="block rounded-2xl border border-border bg-card p-4 text-sm hover:border-primary/40"
+                    className="block"
                   >
                     <p className="font-mono text-xs text-muted-foreground">
                       {t.disciplina.codigo}
@@ -86,6 +87,13 @@ export default async function TurmasPage() {
                       )}
                     </p>
                   </Link>
+                  <Link
+                    href={`/admin/escola/ibm/turmas/${t.id}/editar`}
+                    className="mt-2 inline-block text-xs text-primary hover:underline"
+                  >
+                    Editar
+                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>

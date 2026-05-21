@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";

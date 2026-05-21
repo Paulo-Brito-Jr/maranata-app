@@ -52,3 +52,12 @@ export async function criarDevocional(formData: FormData): Promise<void> {
   revalidatePath("/membro/devocional");
   redirect("/admin/devocional");
 }
+
+export async function excluirDevocional(id: string): Promise<void> {
+  await requireRole("SUPER_ADMIN", "PASTOR_DIRETORIA", "ADMIN_IGREJA");
+  await prisma.devocionalReacao.deleteMany({ where: { devocionalId: id } });
+  await prisma.devocional.delete({ where: { id } });
+  revalidatePath("/admin/devocional");
+  revalidatePath("/membro/devocional");
+  redirect("/admin/devocional");
+}
