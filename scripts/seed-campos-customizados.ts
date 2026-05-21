@@ -94,7 +94,7 @@ async function main() {
         tipo: c.tipo,
         entidade: c.entidade,
         ordem: c.ordem,
-        opcoesJson: opcoesJson ?? null,
+        ...(opcoesJson ? { opcoesJson } : {}),
       },
     });
     console.log(`  ✓ ${c.chave} (${c.entidade}/${c.tipo})`);
