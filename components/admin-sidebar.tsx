@@ -73,6 +73,7 @@ const GRUPOS: Grupo[] = [
       { href: "/admin/devocional", label: "Devocional", icon: BookMarked },
       { href: "/admin/planos-leitura", label: "Planos de leitura", icon: BookMarked },
       { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+      { href: "/admin/atalhos", label: "Atalhos (PWA)", icon: ListChecks },
     ],
   },
   {

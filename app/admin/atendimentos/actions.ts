@@ -35,6 +35,24 @@ export async function criarAtendimentoAction(formData: FormData) {
   revalidatePath("/admin/atendimentos");
 }
 
+export async function atualizarAtendimentoAction(id: string, formData: FormData) {
+  const raw = Object.fromEntries(formData);
+  const data = AtendimentoInput.parse(raw);
+  await prisma.atendimentoPastoral.update({
+    where: { id },
+    data: {
+      membroId: data.membroId,
+      pastorId: data.pastorId,
+      tipo: data.tipo,
+      resumo: data.resumo,
+      detalhes: data.detalhes || null,
+      proximaAcao: data.proximaAcao || null,
+      realizadoEm: data.realizadoEm ? new Date(data.realizadoEm) : new Date(),
+    },
+  });
+  revalidatePath("/admin/atendimentos");
+}
+
 export async function excluirAtendimentoAction(id: string) {
   await prisma.atendimentoPastoral.delete({ where: { id } });
   revalidatePath("/admin/atendimentos");
