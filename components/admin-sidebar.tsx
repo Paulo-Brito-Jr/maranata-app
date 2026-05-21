@@ -19,6 +19,7 @@ import {
   Bell,
   Banknote,
   Settings,
+  Tag,
   BookMarked,
   GraduationCap,
   ClipboardList,
@@ -55,6 +56,7 @@ const GRUPOS: Grupo[] = [
     titulo: "Comunidade",
     itens: [
       { href: "/admin/celulas", label: "Células", icon: Heart },
+      { href: "/admin/equipes", label: "Equipes ministeriais", icon: HandHeart },
       { href: "/admin/intercessao", label: "Intercessão", icon: Sparkles },
       { href: "/admin/testemunhos", label: "Testemunhos", icon: MessageCircleHeart },
       { href: "/admin/jornadas", label: "Jornadas", icon: Map },
@@ -64,8 +66,12 @@ const GRUPOS: Grupo[] = [
     titulo: "Eventos & Mídia",
     itens: [
       { href: "/admin/eventos", label: "Eventos", icon: Calendar },
+      { href: "/admin/eventos/categorias", label: "Categorias de evento", icon: Tag },
       { href: "/admin/pregacoes", label: "Pregações", icon: Mic },
+      { href: "/admin/pregacoes/series", label: "Séries", icon: ListChecks },
+      { href: "/admin/pregacoes/categorias", label: "Categorias de pregação", icon: Tag },
       { href: "/admin/devocional", label: "Devocional", icon: BookMarked },
+      { href: "/admin/planos-leitura", label: "Planos de leitura", icon: BookMarked },
       { href: "/admin/banners", label: "Banners", icon: ImageIcon },
     ],
   },
