@@ -54,6 +54,15 @@ model Igreja {
   lojaPedidos         LojaPedido[]
   ebdClasses          EbdClasse[]
   doadores            Doador[]
+  pagamentosLocais    PagamentoLocal[]
+  equipes             Equipe[]
+  trilhas             Trilha[]
+  planosLeitura       PlanoLeitura[]
+  ibmCursos           IbmCurso[]
+  ibmTurmas           IbmTurma[]
+  categoriasEvento    CategoriaEvento[]
+  categoriasPregacao  CategoriaPregacao[]
+  seriesPregacao      SeriePregacao[]
 
   @@index([regionalId])
 }
@@ -112,6 +121,8 @@ model Usuario {
   membro          Membro?
   pushSubscriptions PushSubscription[]
   atendimentos    AtendimentoPastoral[]
+  pastorGeralMinisterios PastorGeralMinisterio[]
+  pagamentosValidados PagamentoLocal[] @relation("PagamentosValidados")
 
   @@index([papel])
 }
@@ -185,6 +196,7 @@ model Membro {
   atendimentos    AtendimentoPastoral[]
   historico       HistoricoMembro[]
   doadores        Doador[]
+  pagamentosLocais PagamentoLocal[]
 
   @@index([igrejaId])
   @@index([status])
@@ -255,9 +267,13 @@ model Equipe {
   inchurchId Int?          @unique
   nome      String
   descricao String?
+  igrejaId  String?        // NULL = ministério geral / sede
+  igreja    Igreja?        @relation(fields: [igrejaId], references: [id])
   ativa     Boolean        @default(true)
   membros   EquipeMembro[]
   criadaEm  DateTime       @default(now())
+
+  @@index([igrejaId])
 }
 
 model EquipeMembro {
@@ -401,7 +417,11 @@ model CategoriaEvento {
   nome      String   @unique
   cor       String?
   icone     String?
+  igrejaId  String?  // NULL = categoria global / sede
+  igreja    Igreja?  @relation(fields: [igrejaId], references: [id])
   eventos   Evento[]
+
+  @@index([igrejaId])
 }
 
 model Evento {
@@ -490,7 +510,10 @@ model InscricaoEvento {
   telefoneAvulso  String?
   status          StatusInscricao  @default(PENDENTE)
   qrCode          String           @unique @default(cuid())
-  pagamentoId     String?          // ref Safe2Pay
+  metodoPagamento MetodoPagamento?
+  pagamentoId     String?          // ref Safe2Pay (PIX/CARTAO)
+  pagamentoLocalId String?         @unique
+  pagamentoLocal  PagamentoLocal?  @relation(fields: [pagamentoLocalId], references: [id])
   valorPago       Decimal?         @db.Decimal(10, 2)
   checkInEm       DateTime?
   respostas       RespostaInscricao[]
@@ -517,7 +540,11 @@ model CategoriaPregacao {
   id        String     @id @default(cuid())
   inchurchId Int?      @unique
   nome      String     @unique
+  igrejaId  String?    // NULL = global / sede
+  igreja    Igreja?    @relation(fields: [igrejaId], references: [id])
   pregacoes Pregacao[]
+
+  @@index([igrejaId])
 }
 
 model SeriePregacao {
@@ -526,8 +553,12 @@ model SeriePregacao {
   titulo    String
   descricao String?
   capaUrl   String?
+  igrejaId  String?    // NULL = global / sede
+  igreja    Igreja?    @relation(fields: [igrejaId], references: [id])
   criadaEm  DateTime   @default(now())
   pregacoes Pregacao[]
+
+  @@index([igrejaId])
 }
 
 model Pregacao {
@@ -634,8 +665,12 @@ model PlanoLeitura {
   diasJson  Json?    // estrutura dos dias [{ dia: 1, livro: "joao", capitulos: [1,2] }]
   capaUrl   String?
   publicado Boolean  @default(true)
+  igrejaId  String?  // NULL = global / sede
+  igreja    Igreja?  @relation(fields: [igrejaId], references: [id])
   criadoEm  DateTime @default(now())
   inscricoes PlanoLeituraInscricao[]
+
+  @@index([igrejaId])
 }
 
 model PlanoLeituraInscricao {
@@ -1099,9 +1134,13 @@ model Trilha {
   ordem       Int      @default(0)
   ativa       Boolean  @default(true)
   obrigatoria Boolean  @default(false) // ex: "Boas-vindas"
+  igrejaId    String?  // NULL = global / sede
+  igreja      Igreja?  @relation(fields: [igrejaId], references: [id])
   etapas      EtapaTrilha[]
   pessoas     PessoaJornada[]
   criadaEm    DateTime @default(now())
+
+  @@index([igrejaId])
 }
 
 model EtapaTrilha {
@@ -1491,9 +1530,13 @@ model IbmCurso {
   duracaoSemestres Int                 @default(8)
   capaUrl          String?
   ativo            Boolean             @default(true)
+  igrejaId         String?             // NULL = curso corporativo / sede
+  igreja           Igreja?             @relation(fields: [igrejaId], references: [id])
   disciplinas      IbmDisciplina[]
   matriculas       IbmMatriculaCurso[]
   criadoEm         DateTime            @default(now())
+
+  @@index([igrejaId])
 }
 
 model IbmDisciplina {
@@ -1542,6 +1585,8 @@ model IbmTurma {
   disciplina    IbmDisciplina  @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
   professorId   String?
   professor     IbmProfessor?  @relation(fields: [professorId], references: [id])
+  igrejaId      String?        // NULL = turma corporativa / sede
+  igreja        Igreja?        @relation(fields: [igrejaId], references: [id])
   semestre      String         // "2026.1"
   diaSemana     Int            // 0..6
   horario       String         // "19:30"
@@ -1554,6 +1599,7 @@ model IbmTurma {
   criadoEm      DateTime       @default(now())
 
   @@index([disciplinaId, semestre])
+  @@index([igrejaId])
 }
 
 model IbmMatriculaCurso {
@@ -1736,4 +1782,92 @@ model HistoricoMembro {
   criadoEm  DateTime @default(now())
 
   @@index([membroId, criadoEm])
+}
+
+// =============================================================================
+// PAGAMENTO LOCAL (dinheiro recebido numa das 15 unidades)
+// =============================================================================
+
+enum MetodoPagamento {
+  PIX
+  CARTAO
+  DINHEIRO_LOCAL
+}
+
+enum StatusPagamentoLocal {
+  AGUARDANDO        // criado, esperando pagamento físico
+  MEMBRO_INFORMOU   // membro marcou "já paguei" no app
+  ADMIN_CONFIRMOU   // admin recebeu, esperando double-check do membro
+  VALIDADO          // ambos lados confirmaram OU validador unilateral
+  CANCELADO         // expirou ou cancelado manualmente
+}
+
+model PagamentoLocal {
+  id              String   @id @default(cuid())
+  origem          String   // "evento" | "doacao" | "loja"
+  origemId        String   // ID do recurso (eventoId, doacaoId, lojaPedidoId)
+  valor           Decimal  @db.Decimal(10, 2)
+  descricao       String?
+
+  // Quem deve pagar
+  membroId        String?
+  membro          Membro?  @relation(fields: [membroId], references: [id])
+  nomePagador     String?  // fallback quando não é membro logado
+  emailPagador    String?
+  telefonePagador String?
+
+  // Onde deve pagar
+  igrejaId        String
+  igreja          Igreja   @relation(fields: [igrejaId], references: [id])
+
+  status          StatusPagamentoLocal @default(AGUARDANDO)
+
+  // Side membro
+  membroInformouEm    DateTime?
+  observacaoMembro    String?
+
+  // Side admin
+  adminConfirmouEm    DateTime?
+  adminConfirmouPorId String?
+  adminConfirmouPor   Usuario? @relation("PagamentosValidados", fields: [adminConfirmouPorId], references: [id])
+  observacaoAdmin     String?
+
+  expiraEm        DateTime?
+  canceladoEm     DateTime?
+  canceladoMotivo String?
+
+  inscricaoEvento InscricaoEvento?
+
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@index([igrejaId, status])
+  @@index([membroId])
+  @@index([origem, origemId])
+}
+
+// =============================================================================
+// PASTOR GERAL DE MINISTÉRIO
+// (pastor responsável por um ministério em todas as 15 unidades)
+// =============================================================================
+
+enum MinisterioGeral {
+  KIDS
+  TEEN
+  JOVENS
+  CASAIS
+  TERCEIRA_IDADE
+  LOUVOR
+}
+
+model PastorGeralMinisterio {
+  id          String          @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario         @relation(fields: [usuarioId], references: [id])
+  ministerio  MinisterioGeral
+  ativo       Boolean         @default(true)
+  criadoEm    DateTime        @default(now())
+
+  @@unique([usuarioId, ministerio])
+  @@index([ministerio])
 }
