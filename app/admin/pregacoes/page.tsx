@@ -121,7 +121,7 @@ export default async function PregacoesPage() {
             {pregacoes.map((p) => (
               <Link
                 key={p.id}
-                href={`/membro/pregacoes/${p.id}`}
+                href={`/admin/pregacoes/${p.id}/editar`}
                 className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40"
               >
                 {p.youtubeId ? (

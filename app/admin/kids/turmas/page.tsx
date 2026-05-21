@@ -107,6 +107,12 @@ export default async function TurmasPage() {
                     >
                       ver sala
                     </Link>
+                    <Link
+                      href={`/admin/kids/turmas/${t.id}/editar`}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      editar
+                    </Link>
                     <form action={alternarTurma.bind(null, t.id)}>
                       <button className="text-muted-foreground hover:text-foreground">
                         {t.ativa ? "desativar" : "ativar"}

@@ -58,7 +58,11 @@ export default async function ClasseDetalhe({
         { label: "Aulas dadas", valor: classe.aulas.length },
         { label: "Capacidade", valor: classe.capacidade ?? "—" },
       ]}
-      acoes={[{ href: "/admin/escola/ebd", label: "← Classes" }]}
+      acoes={[
+        { href: `/admin/escola/ebd/${id}/editar`, label: "Editar classe" },
+        { href: `/admin/escola/ebd/${id}/chamada`, label: "Fazer chamada" },
+        { href: "/admin/escola/ebd", label: "← Classes" },
+      ]}
     >
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5">

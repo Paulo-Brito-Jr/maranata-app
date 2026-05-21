@@ -48,7 +48,39 @@ export async function criarEvento(formData: FormData) {
   redirect(`/admin/eventos/${e.id}`);
 }
 
+export async function atualizarEvento(id: string, formData: FormData) {
+  const raw = Object.fromEntries(formData);
+  const data = EventoInput.parse(raw);
+  await prisma.evento.update({
+    where: { id },
+    data: {
+      igrejaId: data.igrejaId,
+      categoriaId: data.categoriaId || null,
+      localEventoId: data.localEventoId || null,
+      titulo: data.titulo,
+      slug: data.slug,
+      descricao: data.descricao || null,
+      inicio: new Date(data.inicio),
+      fim: data.fim ? new Date(data.fim) : null,
+      local: data.local || null,
+      endereco: data.endereco || null,
+      publicado: data.publicado === "on",
+      inscricoesAbertas: data.inscricoesAbertas === "on",
+      ehGeral: data.ehGeral === "on",
+    },
+  });
+  revalidatePath("/admin/eventos");
+  revalidatePath(`/admin/eventos/${id}`);
+  redirect(`/admin/eventos/${id}`);
+}
+
 export async function deletarEvento(id: string) {
+  // Apaga inscrições + lotes + ingressos primeiro (FKs cascateiam via Prisma se schema)
+  // Inscrições referenciam Evento, então delete em cascata via prisma.
+  await prisma.inscricaoEvento.deleteMany({ where: { eventoId: id } });
+  await prisma.loteEvento.deleteMany({ where: { eventoId: id } });
+  await prisma.ingressoEvento.deleteMany({ where: { eventoId: id } });
+  await prisma.perguntaEvento.deleteMany({ where: { eventoId: id } });
   await prisma.evento.delete({ where: { id } });
   revalidatePath("/admin/eventos");
   redirect("/admin/eventos");

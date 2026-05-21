@@ -32,6 +32,43 @@ export async function criarPregacao(formData: FormData) {
   redirect(`/admin/pregacoes`);
 }
 
+export async function atualizarPregacao(id: string, formData: FormData) {
+  const titulo = String(formData.get("titulo") || "").trim();
+  const pregador = String(formData.get("pregador") || "").trim() || null;
+  const data = String(formData.get("data") || "");
+  const youtubeId = String(formData.get("youtubeId") || "").trim() || null;
+  const categoriaId = String(formData.get("categoriaId") || "").trim() || null;
+  const descricao = String(formData.get("descricao") || "").trim() || null;
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
+  if (!titulo) return;
+
+  await prisma.pregacao.update({
+    where: { id },
+    data: {
+      titulo,
+      pregador,
+      data: data ? new Date(data) : null,
+      youtubeId,
+      categoriaId,
+      descricao,
+      igrejaId,
+    },
+  });
+  revalidatePath("/admin/pregacoes");
+  revalidatePath(`/admin/pregacoes/${id}`);
+  redirect("/admin/pregacoes");
+}
+
+export async function excluirPregacao(id: string) {
+  await prisma.pregacaoFavorita.deleteMany({ where: { pregacaoId: id } });
+  await prisma.pregacaoProgresso.deleteMany({ where: { pregacaoId: id } });
+  await prisma.pregacaoComentario.deleteMany({ where: { pregacaoId: id } });
+  await prisma.pregacao.delete({ where: { id } });
+  revalidatePath("/admin/pregacoes");
+  redirect("/admin/pregacoes");
+}
+
 export async function criarPush(formData: FormData) {
   const titulo = String(formData.get("titulo") || "").trim();
   const corpo = String(formData.get("corpo") || "").trim();
