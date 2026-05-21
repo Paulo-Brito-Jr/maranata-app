@@ -24,6 +24,8 @@ import {
   MessageSquare,
   FileText,
   ListChecks,
+  ImageIcon,
+  ShieldCheck,
 } from "lucide-react";
 
 const ITENS = [
@@ -46,6 +48,8 @@ const ITENS = [
   { href: "/admin/mensagens", label: "Mensagens", icon: MessageSquare },
   { href: "/admin/paginas", label: "Páginas multiuso", icon: FileText },
   { href: "/admin/campos-customizados", label: "Campos custom", icon: ListChecks },
+  { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+  { href: "/admin/audit", label: "Auditoria", icon: ShieldCheck },
   { href: "/admin/config", label: "Configurações", icon: Settings },
 ];
 
