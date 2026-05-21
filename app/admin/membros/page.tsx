@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Membros" };
 export const dynamic = "force-dynamic";
@@ -13,21 +14,28 @@ export default async function MembrosPage({
   searchParams: Promise<{ q?: string; igreja?: string }>;
 }) {
   const { q, igreja } = await searchParams;
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
+  const igrejaFiltro = igreja || ctxFiltro.igrejaId;
 
   const [membros, totalMembros, totalVisitantes, totalNovos, igrejas] = await Promise.all([
     prisma.membro.findMany({
       where: {
         ...(q ? { nome: { contains: q, mode: "insensitive" as const } } : {}),
-        ...(igreja ? { igrejaId: igreja } : {}),
+        ...(igrejaFiltro ? { igrejaId: igrejaFiltro } : {}),
       },
       include: { igreja: { select: { nome: true } } },
       orderBy: { nome: "asc" },
       take: 100,
     }),
-    prisma.membro.count(),
-    prisma.visitante.count(),
+    prisma.membro.count({ where: igrejaFiltro ? { igrejaId: igrejaFiltro } : {} }),
+    prisma.visitante.count({ where: igrejaFiltro ? { igrejaId: igrejaFiltro } : {} }),
     prisma.novoConvertido.count(),
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.igreja.findMany({
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" },
+    }),
   ]);
 
   return (

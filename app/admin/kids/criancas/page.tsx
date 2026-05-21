@@ -3,14 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input, Select, Button } from "@/components/ui/field";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import { criarCrianca } from "../actions";
 
 export const metadata = { title: "Crianças Kids" };
 export const dynamic = "force-dynamic";
 
 export default async function CriancasPage() {
+  const ctx = await getIgrejaContexto({ ministerioPagina: "KIDS" });
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+
   const [criancas, igrejas, total] = await Promise.all([
     prisma.kidsCrianca.findMany({
+      where: filtroIgreja,
       include: {
         igreja: { select: { nome: true } },
         responsaveis: { where: { principal: true }, take: 1 },
@@ -18,8 +23,12 @@ export default async function CriancasPage() {
       orderBy: { nome: "asc" },
       take: 100,
     }),
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
-    prisma.kidsCrianca.count(),
+    prisma.igreja.findMany({
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" },
+    }),
+    prisma.kidsCrianca.count({ where: filtroIgreja }),
   ]);
 
   return (

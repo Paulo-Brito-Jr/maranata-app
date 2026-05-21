@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input } from "@/components/ui/field";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Usuários do app" };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,10 @@ export default async function AdminUsuariosAppPage({
   const ligacao = p.ligacao ?? ""; // "membros" | "soltos"
   const page = Math.max(1, Number(p.page ?? 1));
 
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
+  const igrejaFinal = igreja || ctxFiltro.igrejaId;
+
   const where: Record<string, unknown> = { ativo: true };
   if (q) {
     where.OR = [
@@ -26,7 +31,7 @@ export default async function AdminUsuariosAppPage({
       { telefone: { contains: q } },
     ];
   }
-  if (igreja) where.igrejaId = igreja;
+  if (igrejaFinal) where.igrejaId = igrejaFinal;
   if (ligacao === "membros") where.membro = { isNot: null };
   if (ligacao === "soltos") where.membro = { is: null };
 

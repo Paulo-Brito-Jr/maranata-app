@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { brl } from "@/lib/utils";
 import { getAppUrl } from "@/lib/safe2pay/config";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Financeiro" };
 export const dynamic = "force-dynamic";
@@ -15,8 +16,11 @@ export default async function FinanceiroPage({
   searchParams: Promise<Search>;
 }) {
   const sp = await searchParams;
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
   const contaIdFiltro = sp.contaId && sp.contaId !== "todas" ? sp.contaId : null;
-  const igrejaIdFiltro = sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : null;
+  const igrejaIdFiltro =
+    sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : ctxFiltro.igrejaId ?? null;
 
   const inicioMes = new Date();
   inicioMes.setDate(1);

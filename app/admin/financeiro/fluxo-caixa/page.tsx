@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { brl } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import { FluxoCaixaChart, type FluxoCaixaPoint } from "./chart-client";
 
 export const metadata = { title: "Fluxo de caixa" };
@@ -30,7 +31,10 @@ export default async function FluxoCaixaPage({
   searchParams: Promise<Search>;
 }) {
   const sp = await searchParams;
-  const igrejaIdFiltro = sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : null;
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
+  const igrejaIdFiltro =
+    sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : ctxFiltro.igrejaId ?? null;
   const contaIdFiltro = sp.contaId && sp.contaId !== "todas" ? sp.contaId : null;
 
   const hoje = new Date();

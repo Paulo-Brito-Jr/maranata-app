@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input } from "@/components/ui/field";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Doadores" };
 export const dynamic = "force-dynamic";
@@ -19,6 +20,10 @@ export default async function AdminDoadoresPage({
   const tipo = p.tipo ?? ""; // "natural_person" | "legal_person"
   const page = Math.max(1, Number(p.page ?? 1));
 
+  // Respeita ctx do topbar; filtro explícito ?igreja=... sobrescreve.
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
+
   const where: Record<string, unknown> = {};
   if (q) {
     where.OR = [
@@ -28,6 +33,7 @@ export default async function AdminDoadoresPage({
     ];
   }
   if (igreja) where.igrejaId = igreja;
+  else if (ctxFiltro.igrejaId) where.igrejaId = ctxFiltro.igrejaId;
   if (tipo) where.personType = tipo;
 
   const [doadores, total, totalGeral, comMembro, comPix, comWhatsapp, igrejas] = await Promise.all([

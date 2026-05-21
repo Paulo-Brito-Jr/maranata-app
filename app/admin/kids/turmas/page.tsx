@@ -2,21 +2,30 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { Field, Input, Select, Button } from "@/components/ui/field";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import { criarTurma, alternarTurma } from "./actions";
 
 export const metadata = { title: "Turmas Kids" };
 export const dynamic = "force-dynamic";
 
 export default async function TurmasPage() {
+  const ctx = await getIgrejaContexto({ ministerioPagina: "KIDS" });
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+
   const [turmas, igrejas] = await Promise.all([
     prisma.kidsTurma.findMany({
+      where: filtroIgreja,
       include: {
         igreja: { select: { nome: true } },
         _count: { select: { checkins: { where: { saidaEm: null } } } },
       },
       orderBy: [{ ativa: "desc" }, { nome: "asc" }],
     }),
-    prisma.igreja.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.igreja.findMany({
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" },
+    }),
   ]);
 
   return (

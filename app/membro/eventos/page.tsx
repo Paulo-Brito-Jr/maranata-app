@@ -1,17 +1,26 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { dataPtBR } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata = { title: "Eventos" };
 export const dynamic = "force-dynamic";
 
 export default async function MembroEventos() {
   const agora = new Date();
+  const user = await getCurrentUser();
+  // Membro vê: eventos gerais (ehGeral=true, organizados pela Sede) + eventos
+  // da sua congregação local (igrejaId do JWT). Sem JWT vê só os publicados.
+  const filtroIgreja = user?.igrejaId
+    ? { OR: [{ ehGeral: true }, { igrejaId: user.igrejaId }] }
+    : {};
+
   const eventos = await prisma.evento.findMany({
-    where: { publicado: true, inicio: { gte: agora } },
+    where: { publicado: true, inicio: { gte: agora }, ...filtroIgreja },
     include: {
       igreja: { select: { nome: true } },
       categoria: { select: { nome: true, cor: true } },
+      localEvento: { select: { nome: true, tipo: true } },
     },
     orderBy: { inicio: "asc" },
     take: 50,
@@ -59,8 +68,18 @@ export default async function MembroEventos() {
               <h2 className="mt-1 text-base font-semibold leading-tight">
                 {e.titulo}
               </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {e.igreja.nome}
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span>{e.igreja.nome}</span>
+                {e.ehGeral && (
+                  <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                    Geral
+                  </span>
+                )}
+                {e.localEvento && e.localEvento.tipo === "ACAMPAMENTO" && (
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
+                    🏕️ Acampamento
+                  </span>
+                )}
               </p>
               {e.local && (
                 <p className="mt-1 text-xs text-muted-foreground">📍 {e.local}</p>

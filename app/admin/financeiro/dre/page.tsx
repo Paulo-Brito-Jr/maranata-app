@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { brl } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "DRE" };
 export const dynamic = "force-dynamic";
@@ -33,7 +34,10 @@ const NOMES_MES = [
 
 export default async function DrePage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const igrejaIdFiltro = sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : null;
+  const ctx = await getIgrejaContexto();
+  const ctxFiltro = filtroIgrejaWhere(ctx);
+  const igrejaIdFiltro =
+    sp.igrejaId && sp.igrejaId !== "todas" ? sp.igrejaId : ctxFiltro.igrejaId ?? null;
 
   // Janela: últimos 12 meses completos terminando no mês corrente
   const hoje = new Date();
