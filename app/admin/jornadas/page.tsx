@@ -149,6 +149,12 @@ export default async function JornadasPage() {
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-1 text-xs">
+                  <a
+                    href={`/admin/jornadas/${t.id}/editar`}
+                    className="rounded-full bg-primary/15 px-2 py-1 text-primary hover:bg-primary/25"
+                  >
+                    Editar
+                  </a>
                   <form
                     action={toggleTrilhaAtivaAction.bind(null, t.id, !t.ativa)}
                   >

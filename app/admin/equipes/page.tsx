@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
@@ -121,6 +122,12 @@ export default async function EquipesPage() {
                   {e._count.membros} membro(s)
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1 text-xs">
+                  <Link
+                    href={`/admin/equipes/${e.id}/editar`}
+                    className="rounded-full bg-primary/15 px-2 py-1 text-primary hover:bg-primary/25"
+                  >
+                    Editar
+                  </Link>
                   <form action={toggleEquipeAtivaAction.bind(null, e.id, !e.ativa)}>
                     <button className="rounded-full bg-secondary/60 px-2 py-1 hover:bg-secondary">
                       {e.ativa ? "Desativar" : "Ativar"}

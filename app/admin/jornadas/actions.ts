@@ -29,6 +29,22 @@ export async function toggleTrilhaAtivaAction(id: string, ativa: boolean) {
   revalidatePath("/admin/jornadas");
 }
 
+export async function atualizarTrilhaAction(id: string, formData: FormData) {
+  const titulo = String(formData.get("titulo") || "").trim();
+  const descricao = String(formData.get("descricao") || "").trim() || null;
+  const obrigatoria = formData.get("obrigatoria") === "on";
+  const ativa = formData.get("ativa") === "on";
+  const igrejaIdRaw = String(formData.get("igrejaId") || "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
+  if (!titulo) return;
+
+  await prisma.trilha.update({
+    where: { id },
+    data: { titulo, descricao, obrigatoria, ativa, igrejaId },
+  });
+  revalidatePath("/admin/jornadas");
+}
+
 export async function excluirTrilhaAction(id: string) {
   await prisma.trilha.delete({ where: { id } });
   revalidatePath("/admin/jornadas");
