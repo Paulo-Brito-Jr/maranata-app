@@ -106,6 +106,33 @@ Todos os backups em `~/dev/maranata-app-paridade-backups/YYYY-MM-DD/`:
 - `*-schema-*.sql` — schema-only (uncompressed, fácil leitura)
 - `row-counts-snapshot-*.csv` — contagens
 
+## F08 — Status investigação fetcher fornecedor (2026-05-21)
+
+API InChurch funcional via `INCHURCH_API_TOKEN` + header `channel: control_panel`:
+
+```bash
+TOKEN=$(vault get "$VAULT_PASSWORD" INCHURCH_API_TOKEN)
+BASE=https://inradar.com.br/api
+curl -H "Authorization: $TOKEN" -H "channel: control_panel" "$BASE/v1/cell/?limit=2"
+```
+
+Endpoints testados:
+- ✅ `/v1/cell/` lista 156 cells com `leaders[]`, `network`, `tertiarygroup`
+- ✅ `/v1/cell/{id}/` detalhe single (mas com `participants:[]` e `visitors:[]` vazios na amostra testada)
+- ❌ `/v1/cell_visitor/?cell={id}` retorna vazio (sem dados ou endpoint diferente)
+- ❌ `/v1/member_profiles/?cell={id}` retorna `total_count: 0`
+- ❌ `/v1/cell_member/` rota inexistente (HTML)
+- ✅ `/v1/small_group/?cell={id}` retorna small groups mas não membros
+
+**Próximo passo (F08 retomada):**
+1. Capturar HAR da admin.inchurch.com.br ao navegar célula→participantes
+2. Identificar endpoint exato e payload
+3. Implementar fetcher TypeScript com pagination + retry + rate limit
+4. Re-popular `participantes_celulas.celula_id` e `visitantes_celulas.celula_id`
+5. Rerodar `pnpm etl:table VisitanteCelula` no maranata-app
+
+Alternativa: scrape via Playwright autenticado em admin.inchurch.com.br (rota `/celulas/lista` → cell detail → aba membros).
+
 ## F26 — Auditoria final (2026-05-21)
 
 Cross-check `inchurch-dashboard` (32 rotas read-only) vs `maranata-app` (105 rotas):
