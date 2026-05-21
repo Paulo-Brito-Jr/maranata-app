@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MaranataLogo } from "@/components/maranata-logo";
 import {
   getCurrentUser,
   getDefaultRedirectForUser,
@@ -62,16 +63,13 @@ export default async function HomePage() {
       <header className="faixa-brand text-brand-blue-foreground">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
-            <div
-              className="size-10 rounded-full bg-white/20 backdrop-blur"
-              aria-hidden
-            />
             <div>
               <div className="text-sm uppercase tracking-widest opacity-80">
                 IME
               </div>
               <div className="text-lg font-semibold">Maranata App</div>
             </div>
+            <MaranataLogo size={40} className="bg-white/95 rounded-full p-1" />
           </div>
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/eventos" className="hover:underline">
