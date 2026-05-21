@@ -71,6 +71,9 @@ model Igreja {
   categoriasPregacao  CategoriaPregacao[]
   seriesPregacao      SeriePregacao[]
   locaisEvento        LocalEvento[]
+  banners             Banner[]
+  atalhos             Atalho[]
+  devocionais         Devocional[]
 
   @@index([regionalId])
 }
@@ -667,7 +670,11 @@ model Banner {
   fim         DateTime?
   ativo       Boolean  @default(true)
   cliques     Int      @default(0)
+  igrejaId    String?  // NULL = banner global (Sede/todas)
+  igreja      Igreja?  @relation(fields: [igrejaId], references: [id])
   criadoEm    DateTime @default(now())
+
+  @@index([igrejaId])
 }
 
 model PlanoLeitura {
@@ -702,7 +709,7 @@ model PlanoLeituraInscricao {
 
 model Devocional {
   id              String   @id @default(cuid())
-  data            DateTime @unique @db.Date
+  data            DateTime @db.Date
   versiculoRef    String   // "Jo 3.16"
   versiculoTexto  String
   titulo          String
@@ -710,8 +717,13 @@ model Devocional {
   autor           String?
   capaUrl         String?
   publicado       Boolean  @default(true)
+  igrejaId        String?  // NULL = devocional geral (Sede/todas)
+  igreja          Igreja?  @relation(fields: [igrejaId], references: [id])
   criadoEm        DateTime @default(now())
   reacoes         DevocionalReacao[]
+
+  @@unique([data, igrejaId])
+  @@index([igrejaId])
 }
 
 model DevocionalReacao {
@@ -758,6 +770,10 @@ model Atalho {
   icone     String?
   ordem     Int      @default(0)
   ativo     Boolean  @default(true)
+  igrejaId  String?  // NULL = atalho global (Sede/todas)
+  igreja    Igreja?  @relation(fields: [igrejaId], references: [id])
+
+  @@index([igrejaId])
 }
 
 // =============================================================================

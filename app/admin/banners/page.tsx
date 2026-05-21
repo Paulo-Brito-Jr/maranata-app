@@ -1,18 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
-import { Field, Input, Button } from "@/components/ui/field";
+import { Field, Input, Button, Select } from "@/components/ui/field";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import { toggleBannerAction, criarBannerAction, deletarBannerAction } from "./actions";
 
 export const metadata = { title: "Banners" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminBanners() {
-  const [banners, total, totalAtivos, totalCliques] = await Promise.all([
-    prisma.banner.findMany({ orderBy: [{ ativo: "desc" }, { ordem: "asc" }, { criadoEm: "desc" }] }),
-    prisma.banner.count(),
-    prisma.banner.count({ where: { ativo: true } }),
-    prisma.banner.aggregate({ _sum: { cliques: true } }),
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  const bannerWhere = filtroIgreja.igrejaId
+    ? { OR: [{ igrejaId: null }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
+
+  const [banners, total, totalAtivos, totalCliques, igrejas] = await Promise.all([
+    prisma.banner.findMany({
+      where: bannerWhere,
+      include: { igreja: { select: { nome: true, apelido: true } } },
+      orderBy: [{ ativo: "desc" }, { ordem: "asc" }, { criadoEm: "desc" }],
+    }),
+    prisma.banner.count({ where: bannerWhere }),
+    prisma.banner.count({ where: { ativo: true, ...bannerWhere } }),
+    prisma.banner.aggregate({ where: bannerWhere, _sum: { cliques: true } }),
+    prisma.igreja.findMany({
+      where: { ativa: true, tipo: "CONGREGACAO" as const },
+      select: { id: true, nome: true, apelido: true },
+      orderBy: { nome: "asc" },
+    }),
   ]);
 
   const cliques = totalCliques._sum.cliques ?? 0;
@@ -51,7 +67,17 @@ export default async function AdminBanners() {
           <Field label="Fim">
             <Input name="fim" type="date" />
           </Field>
-          <div className="flex items-end">
+          <Field label="Escopo" className="md:col-span-2">
+            <Select name="igrejaId" defaultValue="GERAL">
+              <option value="GERAL">🌐 Geral (todas as 14 unidades)</option>
+              {igrejas.map((ig) => (
+                <option key={ig.id} value={ig.id}>
+                  📍 Local — {ig.apelido ?? ig.nome}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <div className="flex items-end md:col-span-2">
             <Button type="submit">Criar banner</Button>
           </div>
         </form>
@@ -85,6 +111,15 @@ export default async function AdminBanners() {
                     <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
                       ordem {b.ordem}
                     </span>
+                    {b.igreja ? (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-amber-700 dark:text-amber-300">
+                        📍 {b.igreja.apelido ?? b.igreja.nome}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                        🌐 Geral
+                      </span>
+                    )}
                     {b.cliques > 0 && (
                       <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-300">
                         {b.cliques} cliques

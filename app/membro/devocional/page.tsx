@@ -23,12 +23,25 @@ export default async function DevocionalPage() {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  const devocional = await prisma.devocional.findUnique({
-    where: { data: hoje },
+  // Devocional local (igreja do membro) tem precedência sobre geral.
+  // Pega ambos e prefere local quando existir.
+  const devocionais = await prisma.devocional.findMany({
+    where: {
+      data: hoje,
+      publicado: true,
+      OR: [
+        { igrejaId: null }, // geral
+        ...(user.igrejaId ? [{ igrejaId: user.igrejaId }] : []),
+      ],
+    },
     include: {
       reacoes: { select: { tipo: true, membroId: true } },
     },
   });
+  const devocional =
+    devocionais.find((d) => d.igrejaId !== null) ??
+    devocionais.find((d) => d.igrejaId === null) ??
+    null;
 
   const fallback = versiculoDoDia(hoje);
 

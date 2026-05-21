@@ -16,6 +16,8 @@ export async function criarBannerAction(formData: FormData) {
   const imagemUrl = String(formData.get("imagemUrl") ?? "").trim() || null;
   const linkUrl = String(formData.get("linkUrl") ?? "").trim() || null;
   const ordem = Number(formData.get("ordem") ?? 0) || 0;
+  const igrejaIdRaw = String(formData.get("igrejaId") ?? "").trim();
+  const igrejaId = igrejaIdRaw && igrejaIdRaw !== "GERAL" ? igrejaIdRaw : null;
 
   await prisma.banner.create({
     data: {
@@ -24,6 +26,7 @@ export async function criarBannerAction(formData: FormData) {
       imagemUrl,
       linkUrl,
       ordem,
+      igrejaId,
       inicio: dateOrNull(formData.get("inicio")),
       fim: dateOrNull(formData.get("fim")),
       ativo: true,

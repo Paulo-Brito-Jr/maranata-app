@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Field, Input, Textarea, Button } from "@/components/ui/field";
+import { prisma } from "@/lib/prisma";
+import { Field, Input, Textarea, Button, Select } from "@/components/ui/field";
 import { criarDevocional } from "./actions";
 
 export const metadata = { title: "Novo devocional" };
@@ -9,7 +10,12 @@ function dataPadrao(): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default function NovoDevocional() {
+export default async function NovoDevocional() {
+  const igrejas = await prisma.igreja.findMany({
+    where: { ativa: true, tipo: "CONGREGACAO" as const },
+    select: { id: true, nome: true, apelido: true },
+    orderBy: { nome: "asc" },
+  });
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <header>
@@ -49,6 +55,20 @@ export default function NovoDevocional() {
 
         <Field label="Reflexão" required hint="Markdown leve aceito.">
           <Textarea name="texto" required rows={10} />
+        </Field>
+
+        <Field
+          label="Escopo"
+          hint="Geral aparece pra todas as 14 unidades. Local sobrescreve o geral só pra membros daquela unidade no mesmo dia."
+        >
+          <Select name="igrejaId" defaultValue="GERAL">
+            <option value="GERAL">🌐 Geral (todas as 14 unidades)</option>
+            {igrejas.map((ig) => (
+              <option key={ig.id} value={ig.id}>
+                📍 Local — {ig.apelido ?? ig.nome}
+              </option>
+            ))}
+          </Select>
         </Field>
 
         <label className="flex items-center gap-2 text-sm">

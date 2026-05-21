@@ -14,6 +14,7 @@ const schema = z.object({
   texto: z.string().min(10),
   autor: z.string().max(120).optional(),
   publicado: z.string().optional(),
+  igrejaId: z.string().optional(),
 });
 
 export async function criarDevocional(formData: FormData): Promise<void> {
@@ -22,9 +23,11 @@ export async function criarDevocional(formData: FormData): Promise<void> {
 
   const dataDia = new Date(parsed.data);
   dataDia.setHours(0, 0, 0, 0);
+  const igrejaId =
+    parsed.igrejaId && parsed.igrejaId !== "GERAL" ? parsed.igrejaId : null;
 
   await prisma.devocional.upsert({
-    where: { data: dataDia },
+    where: { data_igrejaId: { data: dataDia, igrejaId: igrejaId as string } },
     create: {
       data: dataDia,
       titulo: parsed.titulo,
@@ -33,6 +36,7 @@ export async function criarDevocional(formData: FormData): Promise<void> {
       texto: parsed.texto,
       autor: parsed.autor || null,
       publicado: parsed.publicado === "on",
+      igrejaId,
     },
     update: {
       titulo: parsed.titulo,
