@@ -3,25 +3,33 @@ import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
 import { EmptyState } from "@/components/empty-state";
 import { dataPtBR } from "@/lib/utils";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 
 export const metadata = { title: "Eventos" };
 export const dynamic = "force-dynamic";
 
 export default async function EventosPage() {
   const agora = new Date();
+  const ctx = await getIgrejaContexto();
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+  // Eventos gerais (ehGeral=true) sempre aparecem; demais respeitam o filtro.
+  const filtroEventos = filtroIgreja.igrejaId
+    ? { OR: [{ ehGeral: true }, { igrejaId: filtroIgreja.igrejaId }] }
+    : {};
 
   const [proximos, passados, totalCategorias, totalInscricoes] = await Promise.all([
     prisma.evento.findMany({
-      where: { inicio: { gte: agora } },
+      where: { inicio: { gte: agora }, ...filtroEventos },
       include: {
         igreja: { select: { nome: true } },
         categoria: { select: { nome: true, cor: true } },
+        localEvento: { select: { nome: true } },
         _count: { select: { inscricoes: true } },
       },
       orderBy: { inicio: "asc" },
       take: 50,
     }),
-    prisma.evento.count({ where: { inicio: { lt: agora } } }),
+    prisma.evento.count({ where: { inicio: { lt: agora }, ...filtroEventos } }),
     prisma.categoriaEvento.count(),
     prisma.inscricaoEvento.count(),
   ]);
@@ -68,6 +76,14 @@ export default async function EventosPage() {
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {dataPtBR(e.inicio)} · {e.igreja.nome}
+                {e.localEvento && e.localEvento.nome !== `IME Maranata — ${e.igreja.nome}` && (
+                  <> · 📍 {e.localEvento.nome}</>
+                )}
+                {e.ehGeral && (
+                  <span className="ml-2 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                    Geral
+                  </span>
+                )}
               </div>
               <div className="mt-2 text-xs">
                 {e.publicado ? (

@@ -20,6 +20,10 @@
     {
       "path": "/api/crons/prayer-sla-check",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/crons/expirar-pagamentos-locais",
+      "schedule": "0 10 * * *"
     }
   ]
 }

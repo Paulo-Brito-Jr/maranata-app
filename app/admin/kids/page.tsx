@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ModuloShell } from "@/components/modulo-shell";
+import { getIgrejaContexto, filtroIgrejaWhere } from "@/lib/igreja-contexto";
 import {
   Baby,
   ScanLine,
@@ -18,6 +19,10 @@ export default async function KidsHub() {
   const inicioHoje = new Date();
   inicioHoje.setHours(0, 0, 0, 0);
 
+  // Kids é um ministério — pastor geral de KIDS pode ver as 15 unidades.
+  const ctx = await getIgrejaContexto({ ministerioPagina: "KIDS" });
+  const filtroIgreja = filtroIgrejaWhere(ctx);
+
   const [
     totalCriancas,
     totalTurmas,
@@ -26,17 +31,22 @@ export default async function KidsHub() {
     comAlergias,
     salasComAtivos,
   ] = await Promise.all([
-    prisma.kidsCrianca.count({ where: { ativa: true } }),
-    prisma.kidsTurma.count({ where: { ativa: true } }),
-    prisma.kidsCheckin.count({ where: { saidaEm: null } }),
-    prisma.kidsCheckin.count({ where: { entradaEm: { gte: inicioHoje } } }),
+    prisma.kidsCrianca.count({ where: { ativa: true, ...filtroIgreja } }),
+    prisma.kidsTurma.count({ where: { ativa: true, ...filtroIgreja } }),
+    prisma.kidsCheckin.count({
+      where: { saidaEm: null, ...(filtroIgreja.igrejaId ? { turma: { igrejaId: filtroIgreja.igrejaId } } : {}) },
+    }),
+    prisma.kidsCheckin.count({
+      where: { entradaEm: { gte: inicioHoje }, ...(filtroIgreja.igrejaId ? { turma: { igrejaId: filtroIgreja.igrejaId } } : {}) },
+    }),
     prisma.kidsCrianca.count({
-      where: { ativa: true, NOT: [{ alergias: null }, { alergias: "" }] },
+      where: { ativa: true, NOT: [{ alergias: null }, { alergias: "" }], ...filtroIgreja },
     }),
     prisma.kidsTurma.findMany({
       where: {
         ativa: true,
         checkins: { some: { saidaEm: null } },
+        ...filtroIgreja,
       },
       include: {
         igreja: { select: { nome: true } },
