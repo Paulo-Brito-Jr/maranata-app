@@ -2,13 +2,17 @@ import { ThemeToggle } from "./theme-toggle";
 import type { MKUser } from "@/lib/maranata-key-sso";
 import { RoleBadge } from "./role-badge";
 import { ImpersonarStarter } from "./impersonar-controls";
+import { IgrejaSeletor } from "./igreja-seletor";
+import type { IgrejaContexto } from "@/lib/igreja-contexto";
 
 export function AdminTopbar({
   user,
   realRole,
+  igrejaCtx,
 }: {
   user: MKUser | null;
   realRole?: MKUser["role"];
+  igrejaCtx?: IgrejaContexto;
 }) {
   const ehSuperReal = realRole === "SUPER_ADMIN";
   return (
@@ -19,6 +23,7 @@ export function AdminTopbar({
         </span>
       </div>
       <div className="flex items-center gap-3">
+        {igrejaCtx && <IgrejaSeletor ctx={igrejaCtx} />}
         <RoleBadge role={user?.role} />
         {ehSuperReal && <ImpersonarStarter />}
         <ThemeToggle />
