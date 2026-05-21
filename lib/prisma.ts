@@ -1,7 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL!;
+// Runtime queries → DATABASE_URL (pooler, transaction mode 6543).
+// DIRECT_URL (session mode 5432) é só pra prisma migrate.
+// Invertido causava pool exhaustion (max 15 conn) → 500 em prod.
+const connectionString = process.env.DATABASE_URL ?? process.env.DIRECT_URL!;
 
 function createPrismaClient() {
   const adapter = new PrismaPg({ connectionString });
