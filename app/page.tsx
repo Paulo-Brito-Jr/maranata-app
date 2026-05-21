@@ -185,11 +185,19 @@ export default async function HomePage() {
                   }
                   className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-center text-sm transition hover:border-primary/40 hover:bg-secondary/30"
                 >
-                  {a.icone && (
+                  {a.icone && /^https?:\/\//.test(a.icone) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.icone}
+                      alt=""
+                      className="size-10 rounded-lg object-contain"
+                      loading="lazy"
+                    />
+                  ) : a.icone ? (
                     <span className="text-2xl" aria-hidden>
                       {a.icone}
                     </span>
-                  )}
+                  ) : null}
                   <span className="line-clamp-2 text-xs font-medium">
                     {a.titulo}
                   </span>
