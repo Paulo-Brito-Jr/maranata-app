@@ -86,9 +86,9 @@ export async function criarCampanha(formData: FormData) {
 // IMPORTAÇÃO OFX
 // =============================================================================
 
-// Parser e tipos em @/lib/ofx (não-async, pode coexistir com 'use server' aqui).
-import { parseOfx, type OfxTx } from "@/lib/ofx";
-export type { OfxTx };
+// Parser em @/lib/ofx (não-async, pode coexistir com 'use server' aqui).
+// Tipos não são re-exportados — importadores fazem `import type { OfxTx } from "@/lib/ofx"`.
+import { parseOfx } from "@/lib/ofx";
 
 export type ResumoOfx = {
   conciliadas: number;
