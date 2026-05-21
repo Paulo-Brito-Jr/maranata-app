@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { dataPtBR } from "@/lib/utils";
+import { InscricaoForm } from "./inscricao-form";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,12 @@ export default async function EventoPublicoPage({
   });
 
   if (!evento || !evento.publicado) notFound();
+
+  const igrejas = await prisma.igreja.findMany({
+    where: { ativa: true },
+    orderBy: [{ ehSede: "desc" }, { nome: "asc" }],
+    select: { id: true, nome: true, apelido: true, endereco: true },
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -69,50 +76,15 @@ export default async function EventoPublicoPage({
             Garanta sua participação preenchendo os dados abaixo.
           </p>
 
-          <form
-            action="/api/eventos/inscrever"
-            method="POST"
-            className="mt-4 space-y-3"
-          >
-            <input type="hidden" name="eventoId" value={evento.id} />
-            <input
-              type="text"
-              name="nome"
-              required
-              placeholder="Seu nome"
-              className="w-full rounded-xl border border-input bg-background px-3 py-2"
-            />
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="Seu e-mail"
-              className="w-full rounded-xl border border-input bg-background px-3 py-2"
-            />
-            <input
-              type="tel"
-              name="telefone"
-              placeholder="Telefone (opcional)"
-              className="w-full rounded-xl border border-input bg-background px-3 py-2"
-            />
-            {evento.ingressos.length > 0 && (
-              <select
-                name="ingressoId"
-                required
-                className="w-full rounded-xl border border-input bg-background px-3 py-2"
-              >
-                <option value="">Tipo de inscrição...</option>
-                {evento.ingressos.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.nome} — R$ {Number(i.preco).toFixed(2)}
-                  </option>
-                ))}
-              </select>
-            )}
-            <button className="w-full rounded-full bg-primary py-3 font-medium text-primary-foreground hover:opacity-90">
-              Inscrever
-            </button>
-          </form>
+          <InscricaoForm
+            eventoId={evento.id}
+            ingressos={evento.ingressos.map((i) => ({
+              id: i.id,
+              nome: i.nome,
+              preco: Number(i.preco),
+            }))}
+            igrejas={igrejas}
+          />
         </section>
       ) : (
         <p className="rounded-2xl border border-border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
