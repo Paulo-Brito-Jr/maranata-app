@@ -114,6 +114,7 @@ const GRUPOS: Grupo[] = [
   {
     titulo: "Configuração",
     itens: [
+      { href: "/admin/cutover", label: "Cutover InChurch", icon: ChevronRight },
       { href: "/admin/nomenclatura", label: "Nomenclatura", icon: Languages },
       { href: "/admin/campos-customizados", label: "Campos custom", icon: ListChecks },
       { href: "/admin/audit", label: "Auditoria", icon: ShieldCheck },
